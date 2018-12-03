@@ -1,8 +1,8 @@
-package me.itzg.tryetcdworkpart.web;
+package com.rackspace.salus.common.workpart.web;
 
 import java.util.concurrent.CompletableFuture;
-import me.itzg.tryetcdworkpart.Work;
-import me.itzg.tryetcdworkpart.services.WorkAllocator;
+import com.rackspace.salus.common.workpart.Work;
+import com.rackspace.salus.common.workpart.services.WorkAllocator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;

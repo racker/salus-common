@@ -1,4 +1,4 @@
-package me.itzg.tryetcdworkpart;
+package com.rackspace.salus.common.workpart;
 
 import com.coreos.jetcd.data.ByteSequence;
 import com.coreos.jetcd.data.KeyValue;

@@ -1,4 +1,4 @@
-package me.itzg.tryetcdworkpart.services;
+package com.rackspace.salus.common.workpart.services;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
@@ -32,10 +32,10 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import lombok.extern.slf4j.Slf4j;
-import me.itzg.tryetcdworkpart.Bits;
-import me.itzg.tryetcdworkpart.Work;
-import me.itzg.tryetcdworkpart.WorkProcessor;
-import me.itzg.tryetcdworkpart.config.WorkerProperties;
+import com.rackspace.salus.common.workpart.Bits;
+import com.rackspace.salus.common.workpart.Work;
+import com.rackspace.salus.common.workpart.WorkProcessor;
+import com.rackspace.salus.common.workpart.config.WorkerProperties;
 import org.hamcrest.Matchers;
 import org.junit.After;
 import org.junit.Assert;

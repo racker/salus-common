@@ -1,7 +1,7 @@
-package me.itzg.tryetcdworkpart.services;
+package com.rackspace.salus.common.workpart.services;
 
 import lombok.extern.slf4j.Slf4j;
-import me.itzg.tryetcdworkpart.WorkProcessor;
+import com.rackspace.salus.common.workpart.WorkProcessor;
 import org.springframework.stereotype.Component;
 
 @Component

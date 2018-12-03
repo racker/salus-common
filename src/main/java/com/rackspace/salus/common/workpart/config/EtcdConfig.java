@@ -1,4 +1,4 @@
-package me.itzg.tryetcdworkpart.config;
+package com.rackspace.salus.common.workpart.config;
 
 import com.coreos.jetcd.Client;
 import org.springframework.beans.factory.annotation.Autowired;

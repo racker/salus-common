@@ -1,4 +1,4 @@
-package me.itzg.tryetcdworkpart;
+package com.rackspace.salus.common.workpart;
 
 import lombok.Data;
 

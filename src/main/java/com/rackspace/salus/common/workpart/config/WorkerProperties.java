@@ -1,4 +1,4 @@
-package me.itzg.tryetcdworkpart.config;
+package com.rackspace.salus.common.workpart.config;
 
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
