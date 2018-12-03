@@ -1,0 +1,6 @@
+server:
+  port: 0
+spring:
+  devtools:
+    livereload:
+      enabled: false
