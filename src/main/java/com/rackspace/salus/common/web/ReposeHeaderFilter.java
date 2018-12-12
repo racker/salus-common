@@ -28,6 +28,7 @@ import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.util.StringUtils;
@@ -38,6 +39,7 @@ import org.springframework.web.filter.GenericFilterBean;
  * <a href="https://repose.atlassian.net/wiki/x/CAALAg">Repose Keystone v2 filter</a> and translates
  * that into an authenticated {@link ReposeHeaderToken}.
  */
+@Slf4j
 public class ReposeHeaderFilter extends GenericFilterBean {
     public static final String ATTR_REPOSE_HEADERS =
         ReposeHeaderFilter.class.getName() + ".REPOSE_HEADERS";
@@ -62,6 +64,7 @@ public class ReposeHeaderFilter extends GenericFilterBean {
 
                 final ReposeHeaderToken auth = new ReposeHeaderToken(tenant, roles);
 
+                log.debug("Processed Repose-driven authentication={}", auth);
                 req.setAttribute(ATTR_REPOSE_HEADERS, true);
                 SecurityContextHolder.getContext().setAuthentication(auth);
             }
