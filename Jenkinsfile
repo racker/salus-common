@@ -19,7 +19,7 @@ podTemplate(label: label, containers: [
                   sh 'TZ=":America/Chicago" date'
                 }
                 stage('Deploy snapshot') {
-                        sh 'mvn deploy -s .mvn/settings.xml'
+                  sh 'mvn deploy -Dmaven.test.skip=true -s .mvn/settings.xml'
                 }
             }
         }
