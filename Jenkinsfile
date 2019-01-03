@@ -15,7 +15,8 @@ podTemplate(label: label, containers: [
                   sh 'mvn install -Dmaven.test.skip=true -s .mvn/settings.xml'
                 }
                 stage('Integration Test') {
-                  sh 'mvn integration-test'
+                  // sh 'mvn integration-test'
+                  sh 'TZ=":America/Chicago" date'
                 }
                 stage('Deploy snapshot') {
                         sh 'mvn deploy -s .mvn/settings.xml'
