@@ -42,7 +42,7 @@ public class KeyHashing {
      * @return The hashed result.
      */
     public String hash(String... values) {
-        String value = Arrays.stream(values).collect(Collectors.joining(DELIMITER));
+        String value = String.join(DELIMITER, values);
         return hashFunction().hashString(value, StandardCharsets.UTF_8).toString();
     }
 
