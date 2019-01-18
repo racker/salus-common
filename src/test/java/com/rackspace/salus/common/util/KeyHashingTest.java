@@ -16,7 +16,6 @@
 
 package com.rackspace.salus.common.util;
 
-import com.rackspace.salus.common.util.KeyHashing;
 import org.junit.Test;
 
 import static org.hamcrest.Matchers.equalTo;
