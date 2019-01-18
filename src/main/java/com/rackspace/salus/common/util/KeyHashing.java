@@ -16,7 +16,7 @@
  *
  */
 
-package com.rackspace.salus.telemetry.etcd.config;
+package com.rackspace.salus.common.util;
 
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
