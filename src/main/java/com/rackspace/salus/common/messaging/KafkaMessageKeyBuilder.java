@@ -1,5 +1,6 @@
 package com.rackspace.salus.common.messaging;
 
+import java.util.Objects;
 import org.springframework.beans.BeanWrapper;
 import org.springframework.beans.InvalidPropertyException;
 import org.springframework.beans.PropertyAccessorFactory;
@@ -53,5 +54,23 @@ public class KafkaMessageKeyBuilder {
     }
 
     return String.join(SEPARATOR, parts);
+  }
+
+  /**
+   * Builds a Kafka message key by composing a string out of the {@code toString} of each
+   * given object.
+   *
+   * @param parts the components of the kafka key to build
+   * @return a string composed of the stringified parts given
+   */
+  public static String buildMessageKeyFromParts(Object... parts) {
+    Assert.notEmpty(parts, "At least one part is required");
+
+    final String[] strings = new String[parts.length];
+    for (int i = 0; i < parts.length; i++) {
+      strings[i] = Objects.toString(parts[i]);
+    }
+
+    return String.join(SEPARATOR, strings);
   }
 }
