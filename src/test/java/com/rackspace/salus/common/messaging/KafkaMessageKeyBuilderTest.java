@@ -88,4 +88,36 @@ public class KafkaMessageKeyBuilderTest {
     KafkaMessageKeyBuilder.buildMessageKey(obj);
   }
 
+  @Test
+  public void buildMessageKeyFromParts_fromStringParts() {
+    final String result = KafkaMessageKeyBuilder.buildMessageKeyFromParts("one", "two");
+
+    assertThat(result, equalTo("one:two"));
+  }
+
+  @Test
+  public void buildMessageKeyFromParts_fromOnePart() {
+    final String result = KafkaMessageKeyBuilder.buildMessageKeyFromParts("one");
+
+    assertThat(result, equalTo("one"));
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void buildMessageKeyFromParts_fromEmptyParts() {
+    KafkaMessageKeyBuilder.buildMessageKeyFromParts();
+  }
+
+  @Test
+  public void buildMessageKeyFromParts_fromMixedTypeParts() {
+    final String result = KafkaMessageKeyBuilder.buildMessageKeyFromParts("one", 2, true);
+
+    assertThat(result, equalTo("one:2:true"));
+  }
+
+  @Test
+  public void buildMessageKeyFromParts_nullParts() {
+    final String result = KafkaMessageKeyBuilder.buildMessageKeyFromParts("one", null);
+
+    assertThat(result, equalTo("one:null"));
+  }
 }
