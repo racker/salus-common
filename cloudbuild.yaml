@@ -9,7 +9,7 @@ steps:
 
   - name: 'gcr.io/cloud-builders/mvn'
     id: DEPLOY
-    args: ['deploy', '-DaltDeploymentRepository=snapshot-repo::default::file:/workspace/blah/snapshot', '-Dmaven.test.skip=true']
+    args: ['deploy', '-DaltDeploymentRepository=snapshot-repo::default::file:/workspace/blah/snapshot']
     # This last step, including the -DaltDeployRepository will later be removed.
     # Hopefully the plugin will be updated soon to correct pushing to work as
     # well as it can pull.
