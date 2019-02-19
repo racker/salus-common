@@ -16,20 +16,24 @@
 
 package com.rackspace.salus.common.web;
 
-import lombok.extern.slf4j.Slf4j;
+import java.util.Collection;
+import org.springframework.security.authentication.AbstractAuthenticationToken;
+import org.springframework.security.core.GrantedAuthority;
 
-/**
- * This Spring Security filter integrates with Repose by consuming the headers populated by the
- * <a href="https://repose.atlassian.net/wiki/x/CAALAg">Repose Keystone v2 filter</a> and translates
- * that into an authenticated {@link PreAuthenticatedToken}.
- */
-@Slf4j
-public class ReposeHeaderFilter extends PreAuthenticatedFilter {
+public class PreAuthenticatedToken extends AbstractAuthenticationToken {
+    private final String username;
 
-    public static final String HEADER_X_ROLES = "X-Roles";
-    public static final String HEADER_TENANT = "X-Tenant-Id";
+    public PreAuthenticatedToken(String username, Collection<? extends GrantedAuthority> authorities) {
+        super(authorities);
+        setAuthenticated(true);
+        this.username = username;
+    }
 
-    public ReposeHeaderFilter() {
-        super(HEADER_TENANT, HEADER_X_ROLES);
+    public Object getCredentials() {
+        return null;
+    }
+
+    public Object getPrincipal() {
+        return username;
     }
 }
