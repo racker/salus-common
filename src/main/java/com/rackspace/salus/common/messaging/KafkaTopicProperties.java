@@ -42,4 +42,7 @@ public class KafkaTopicProperties {
   @NotEmpty
   String resources = "telemetry.resources.json";
 
+  @NotEmpty
+  String monitors = "telemetry.monitors.json";
+
 }
