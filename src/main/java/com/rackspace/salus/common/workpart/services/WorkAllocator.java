@@ -31,6 +31,10 @@ import com.coreos.jetcd.options.PutOption;
 import com.coreos.jetcd.options.WatchOption;
 import com.coreos.jetcd.watch.WatchEvent;
 import com.coreos.jetcd.watch.WatchResponse;
+import com.rackspace.salus.common.workpart.Bits;
+import com.rackspace.salus.common.workpart.Work;
+import com.rackspace.salus.common.workpart.WorkProcessor;
+import com.rackspace.salus.common.workpart.config.WorkerProperties;
 import java.time.Instant;
 import java.util.Deque;
 import java.util.Iterator;
@@ -42,10 +46,6 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import lombok.extern.slf4j.Slf4j;
-import com.rackspace.salus.common.workpart.Bits;
-import com.rackspace.salus.common.workpart.Work;
-import com.rackspace.salus.common.workpart.WorkProcessor;
-import com.rackspace.salus.common.workpart.config.WorkerProperties;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.SmartLifecycle;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
@@ -510,7 +510,7 @@ public class WorkAllocator implements SmartLifecycle {
         )
         .commit()
         .handle((txnResponse, throwable) -> {
-          log.info("Result of grab txn = {}", txnResponse);
+          log.debug("Result of grab txn = {}", txnResponse);
           Boolean retval = true;
           if (throwable != null) {
             log.warn("Failure while committing work grab of {}", workId, throwable);
