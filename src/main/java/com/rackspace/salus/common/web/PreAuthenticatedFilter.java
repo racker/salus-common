@@ -54,8 +54,8 @@ public class PreAuthenticatedFilter extends GenericFilterBean {
     if (servletRequest instanceof HttpServletRequest) {
       final HttpServletRequest req = (HttpServletRequest) servletRequest;
 
-      final List<String> rolesList = rolesHeaders.stream().flatMap(header -> Stream.of(req.getHeader(header))).collect(
-          Collectors.toList());
+      final List<String> rolesList = rolesHeaders.stream().flatMap(header -> Stream.of(req.getHeader(header)))
+          .collect(Collectors.toList());
       final String tenant = req.getHeader(tenantHeader);
 
       if (!rolesList.isEmpty() && (StringUtils.hasText(tenant))) {
