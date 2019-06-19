@@ -19,9 +19,9 @@ package com.rackspace.salus.common.web;
 import static java.util.stream.Collectors.toList;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Enumeration;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
@@ -41,11 +41,11 @@ import org.springframework.web.filter.GenericFilterBean;
 public class PreAuthenticatedFilter extends GenericFilterBean {
 
   private final String tenantHeader;
-  private final String rolesHeader;
+  private final List<String> rolesHeaders;
 
-  public PreAuthenticatedFilter(String tenantHeader, String rolesHeader) {
+  public PreAuthenticatedFilter(String tenantHeader, List<String> rolesHeaders) {
     this.tenantHeader = tenantHeader;
-    this.rolesHeader = rolesHeader;
+    this.rolesHeaders = rolesHeaders;
   }
 
   @Override
@@ -54,15 +54,11 @@ public class PreAuthenticatedFilter extends GenericFilterBean {
     if (servletRequest instanceof HttpServletRequest) {
       final HttpServletRequest req = (HttpServletRequest) servletRequest;
 
-      final Enumeration<String> roleValues = req.getHeaders(rolesHeader);
+      final List<String> rolesList = rolesHeaders.stream().flatMap(header -> Stream.of(req.getHeader(header))).collect(
+          Collectors.toList());
       final String tenant = req.getHeader(tenantHeader);
 
-      if (roleValues.hasMoreElements() && (StringUtils.hasText(tenant))) {
-        final List<String> rolesList = new ArrayList<>();
-        while (roleValues.hasMoreElements()) {
-          rolesList.add(roleValues.nextElement());
-        }
-
+      if (!rolesList.isEmpty() && (StringUtils.hasText(tenant))) {
         final List<SimpleGrantedAuthority> roles = rolesList.stream()
             .map(role ->
                 role

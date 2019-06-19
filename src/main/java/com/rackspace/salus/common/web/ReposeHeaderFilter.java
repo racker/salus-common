@@ -16,6 +16,7 @@
 
 package com.rackspace.salus.common.web;
 
+import java.util.Arrays;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -27,9 +28,10 @@ import lombok.extern.slf4j.Slf4j;
 public class ReposeHeaderFilter extends PreAuthenticatedFilter {
 
     public static final String HEADER_X_ROLES = "X-Roles";
+    public static final String HEADER_X_IMPERSONATOR_ROLES = "X-Impersonator-Roles";
     public static final String HEADER_TENANT = "X-Tenant-Id";
 
     public ReposeHeaderFilter() {
-        super(HEADER_TENANT, HEADER_X_ROLES);
+        super(HEADER_TENANT, Arrays.asList(HEADER_X_ROLES, HEADER_X_IMPERSONATOR_ROLES));
     }
 }
