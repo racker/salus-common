@@ -9,18 +9,6 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 @Configuration
 public class EtcdConfig {
 
-  private final EtcdProperties properties;
-
-  @Autowired
-  public EtcdConfig(EtcdProperties properties) {
-    this.properties = properties;
-  }
-
-  @Bean
-  public Client etcdClient() {
-    return Client.builder().endpoints(properties.getUrl()).build();
-  }
-
   @Bean
   public ThreadPoolTaskScheduler workAllocatorTaskScheduler() {
     final ThreadPoolTaskScheduler taskScheduler = new ThreadPoolTaskScheduler();
