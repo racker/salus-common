@@ -55,7 +55,7 @@ public class PreAuthenticatedFilter extends GenericFilterBean {
                        FilterChain chain) throws IOException, ServletException {
     if (servletRequest instanceof HttpServletRequest) {
       final HttpServletRequest req = (HttpServletRequest) servletRequest;
-      if(getToken(req).isPresent()) {
+      if (getToken(req).isPresent()) {
         final PreAuthenticatedToken auth = getToken(req).get();
         log.debug("Processed Repose-driven authentication={}", auth);
         SecurityContextHolder.getContext().setAuthentication(auth);
