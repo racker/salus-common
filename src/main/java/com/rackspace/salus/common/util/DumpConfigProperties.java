@@ -161,14 +161,18 @@ public class DumpConfigProperties {
   }
 
   /**
-   * Removes common package prefixes from the given Java type.
+   * Removes common package prefixes from the given Java type. Also turns generics like
+   * <code>List&lt;String&gt;</code> into <code>List of String</code> to allow proper
+   * rendering in markdown.
    */
   private static String simplifyType(String type) {
     if (type == null) {
       return null;
     }
 
-    return type.replaceAll("(java\\.lang\\.|java\\.time\\.|java\\.util\\.)", "");
+    return type
+        .replaceAll("(java\\.lang\\.|java\\.time\\.|java\\.util\\.)", "")
+        .replaceAll("<(.*?)>", " of $1");
   }
 
   private static Object nullToEmpty(Object value) {
