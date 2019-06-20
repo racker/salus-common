@@ -19,9 +19,11 @@ package com.rackspace.salus.common.web;
 import static java.util.stream.Collectors.toList;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import java.util.Optional;
+import java.util.Set;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
@@ -53,29 +55,38 @@ public class PreAuthenticatedFilter extends GenericFilterBean {
                        FilterChain chain) throws IOException, ServletException {
     if (servletRequest instanceof HttpServletRequest) {
       final HttpServletRequest req = (HttpServletRequest) servletRequest;
-
-      final List<String> rolesList = rolesHeaders.stream().flatMap(header -> Stream.of(req.getHeader(header)))
-          .collect(Collectors.toList());
-      final String tenant = req.getHeader(tenantHeader);
-
-      if (!rolesList.isEmpty() && (StringUtils.hasText(tenant))) {
-        final List<SimpleGrantedAuthority> roles = rolesList.stream()
-            .map(role ->
-                role
-                    .replace(':', '_')
-                    .replace('-', '_')
-                    .toUpperCase()
-            )
-            .map(a -> new SimpleGrantedAuthority("ROLE_" + a))
-            .collect(toList());
-
-        final PreAuthenticatedToken auth = new PreAuthenticatedToken(tenant, roles);
-
+      if(getToken(req).isPresent()) {
+        final PreAuthenticatedToken auth = getToken(req).get();
         log.debug("Processed Repose-driven authentication={}", auth);
         SecurityContextHolder.getContext().setAuthentication(auth);
       }
     }
-
     chain.doFilter(servletRequest, servletResponse);
+  }
+
+  public Optional<PreAuthenticatedToken> getToken(HttpServletRequest req) {
+
+    final Set<String> rolesSet = new HashSet<>();
+    for (String header : rolesHeaders) {
+      List<String> roleValues = Arrays.asList(req.getHeader(header).split(","));
+      rolesSet.addAll(roleValues);
+    }
+    final String tenant = req.getHeader(tenantHeader);
+
+    if (!rolesSet.isEmpty() && (StringUtils.hasText(tenant))) {
+      final List<SimpleGrantedAuthority> roles = rolesSet.stream()
+          .map(role ->
+              role
+                  .replace(':', '_')
+                  .replace('-', '_')
+                  .toUpperCase()
+          )
+          .map(a -> new SimpleGrantedAuthority("ROLE_" + a))
+          .collect(toList());
+
+      return Optional.of(new PreAuthenticatedToken(tenant, roles));
+    } else {
+      return Optional.empty();
+    }
   }
 }
