@@ -19,9 +19,11 @@ package com.rackspace.salus.common.web;
 import static java.util.stream.Collectors.toList;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Enumeration;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
@@ -41,11 +43,11 @@ import org.springframework.web.filter.GenericFilterBean;
 public class PreAuthenticatedFilter extends GenericFilterBean {
 
   private final String tenantHeader;
-  private final String rolesHeader;
+  private final List<String> rolesHeaders;
 
-  public PreAuthenticatedFilter(String tenantHeader, String rolesHeader) {
+  public PreAuthenticatedFilter(String tenantHeader, List<String> rolesHeaders) {
     this.tenantHeader = tenantHeader;
-    this.rolesHeader = rolesHeader;
+    this.rolesHeaders = rolesHeaders;
   }
 
   @Override
@@ -53,33 +55,42 @@ public class PreAuthenticatedFilter extends GenericFilterBean {
                        FilterChain chain) throws IOException, ServletException {
     if (servletRequest instanceof HttpServletRequest) {
       final HttpServletRequest req = (HttpServletRequest) servletRequest;
-
-      final Enumeration<String> roleValues = req.getHeaders(rolesHeader);
-      final String tenant = req.getHeader(tenantHeader);
-
-      if (roleValues.hasMoreElements() && (StringUtils.hasText(tenant))) {
-        final List<String> rolesList = new ArrayList<>();
-        while (roleValues.hasMoreElements()) {
-          rolesList.add(roleValues.nextElement());
-        }
-
-        final List<SimpleGrantedAuthority> roles = rolesList.stream()
-            .map(role ->
-                role
-                    .replace(':', '_')
-                    .replace('-', '_')
-                    .toUpperCase()
-            )
-            .map(a -> new SimpleGrantedAuthority("ROLE_" + a))
-            .collect(toList());
-
-        final PreAuthenticatedToken auth = new PreAuthenticatedToken(tenant, roles);
-
+      Optional<PreAuthenticatedToken> token = getToken(req);
+      if (token.isPresent()) {
+        final PreAuthenticatedToken auth = token.get();
         log.debug("Processed Repose-driven authentication={}", auth);
         SecurityContextHolder.getContext().setAuthentication(auth);
       }
     }
-
     chain.doFilter(servletRequest, servletResponse);
+  }
+
+  Optional<PreAuthenticatedToken> getToken(HttpServletRequest req) {
+    final Set<String> rolesSet = new HashSet<>();
+    for (String header : rolesHeaders) {
+      String roleString = req.getHeader(header);
+      if (roleString != null) {
+        List<String> roleValues = Arrays.asList(roleString.split(","));
+        rolesSet.addAll(roleValues);
+      }
+    }
+    final String tenant = req.getHeader(tenantHeader);
+
+    if (!rolesSet.isEmpty() && (StringUtils.hasText(tenant))) {
+      final List<SimpleGrantedAuthority> roles = rolesSet.stream()
+          .map(role ->
+              role
+                  .replace(':', '_')
+                  .replace('-', '_')
+                  .toUpperCase()
+          )
+          .map(a -> new SimpleGrantedAuthority("ROLE_" + a))
+          .collect(toList());
+
+      return Optional.of(new PreAuthenticatedToken(tenant, roles));
+    } else {
+      log.debug("Skipping PreAuthenticatedToken creation for tenant={}, roles={}", tenant, rolesSet);
+      return Optional.empty();
+    }
   }
 }
