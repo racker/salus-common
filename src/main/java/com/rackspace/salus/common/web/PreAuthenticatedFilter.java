@@ -64,7 +64,7 @@ public class PreAuthenticatedFilter extends GenericFilterBean {
     chain.doFilter(servletRequest, servletResponse);
   }
 
-  public Optional<PreAuthenticatedToken> getToken(HttpServletRequest req) {
+  Optional<PreAuthenticatedToken> getToken(HttpServletRequest req) {
 
     final Set<String> rolesSet = new HashSet<>();
     for (String header : rolesHeaders) {
