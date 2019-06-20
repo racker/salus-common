@@ -65,7 +65,6 @@ public class PreAuthenticatedFilter extends GenericFilterBean {
   }
 
   Optional<PreAuthenticatedToken> getToken(HttpServletRequest req) {
-
     final Set<String> rolesSet = new HashSet<>();
     for (String header : rolesHeaders) {
       List<String> roleValues = Arrays.asList(req.getHeader(header).split(","));
@@ -86,6 +85,7 @@ public class PreAuthenticatedFilter extends GenericFilterBean {
 
       return Optional.of(new PreAuthenticatedToken(tenant, roles));
     } else {
+      log.debug("Skipping PreAuthenticatedToken creation for tenant={}, roles={}", tenant, rolesSet);
       return Optional.empty();
     }
   }
