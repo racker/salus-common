@@ -20,6 +20,7 @@ import static com.rackspace.salus.common.web.ReposeHeaderFilter.HEADER_TENANT;
 import static com.rackspace.salus.common.web.ReposeHeaderFilter.HEADER_X_IMPERSONATOR_ROLES;
 import static com.rackspace.salus.common.web.ReposeHeaderFilter.HEADER_X_ROLES;
 import static org.hamcrest.Matchers.hasSize;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.when;
@@ -64,5 +65,71 @@ public class PreAuthenticatedFilterTest {
     for (GrantedAuthority authority : token.get().getAuthorities()) {
       assertThat(authority.getAuthority(), StringStartsWith.startsWith("ROLE_"));
     }
+  }
+
+  @Test
+  public void testGetTokenNoRoles() {
+    PreAuthenticatedFilter preAuthenticatedFilter = new PreAuthenticatedFilter(HEADER_TENANT,
+        Arrays.asList(HEADER_X_ROLES, HEADER_X_IMPERSONATOR_ROLES));
+    String tenantId = "12345";
+
+    when(servletRequest.getHeader(HEADER_X_ROLES))
+        .thenReturn(null);
+
+    when(servletRequest.getHeader(HEADER_X_IMPERSONATOR_ROLES))
+        .thenReturn(null);
+
+    when(servletRequest.getHeader(HEADER_TENANT))
+        .thenReturn(tenantId);
+
+    Optional<PreAuthenticatedToken> token = preAuthenticatedFilter.getToken(servletRequest);
+
+    assertFalse(token.isPresent());
+  }
+
+  @Test
+  public void testGetTokenSomeRoles() {
+    PreAuthenticatedFilter preAuthenticatedFilter = new PreAuthenticatedFilter(HEADER_TENANT,
+        Arrays.asList(HEADER_X_ROLES, HEADER_X_IMPERSONATOR_ROLES));
+    String userRoles = "monitoring:admin,dedicated:default,ticketing:admin,identity:user-admin";
+    String tenantId = "12345";
+
+    when(servletRequest.getHeader(HEADER_X_ROLES))
+        .thenReturn(userRoles);
+
+    when(servletRequest.getHeader(HEADER_X_IMPERSONATOR_ROLES))
+        .thenReturn(null);
+
+    when(servletRequest.getHeader(HEADER_TENANT))
+        .thenReturn(tenantId);
+
+    Optional<PreAuthenticatedToken> token = preAuthenticatedFilter.getToken(servletRequest);
+
+    assertTrue(token.isPresent());
+    assertThat(token.get().getAuthorities(), hasSize(4));
+    for (GrantedAuthority authority : token.get().getAuthorities()) {
+      assertThat(authority.getAuthority(), StringStartsWith.startsWith("ROLE_"));
+    }
+  }
+
+  @Test
+  public void testGetTokenNoTenant() {
+    PreAuthenticatedFilter preAuthenticatedFilter = new PreAuthenticatedFilter(HEADER_TENANT,
+        Arrays.asList(HEADER_X_ROLES, HEADER_X_IMPERSONATOR_ROLES));
+    String userRoles = "monitoring:admin,dedicated:default,ticketing:admin,identity:user-admin";
+    String impersonationRoles = "custom:my-admin,salus:admin";
+
+    when(servletRequest.getHeader(HEADER_X_ROLES))
+        .thenReturn(userRoles);
+
+    when(servletRequest.getHeader(HEADER_X_IMPERSONATOR_ROLES))
+        .thenReturn(impersonationRoles);
+
+    when(servletRequest.getHeader(HEADER_TENANT))
+        .thenReturn(null);
+
+    Optional<PreAuthenticatedToken> token = preAuthenticatedFilter.getToken(servletRequest);
+
+    assertFalse(token.isPresent());
   }
 }
