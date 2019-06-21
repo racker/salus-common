@@ -48,17 +48,12 @@ import org.springframework.util.ClassUtils;
  *   as <code>--dump-config=regex,regex,...</code>
  * </p>
  * <p>
- *   The {@link #process(String[])} method returns a chaining operator so that this processing
- *   can be "inserted" before normal Spring Boot startup in the application's <code>main</code>
- *   method, such as
+ *   The {@link #process(String[])} method will call {@link System#exit(int)} if the command-line
+ *   argument was found, so it the invocation can be placed first in the main method, such as
  * </p>
  * <pre>
  public static void main(String[] args) {
-   DumpConfigProperties.process(args)
-   .or(() -> {
-     SpringApplication.run(TelemetryAmbassadorApplication.class, args);
-   });
- }
+   DumpConfigProperties.process(args);
  * </pre>
  * <p>
  *   When activated, the application will exit immediately with an exit code of 0, normally, or
@@ -69,26 +64,21 @@ public class DumpConfigProperties {
 
   private DumpConfigProperties() {}
 
-  public static Chained process(String[] args) {
-    for (int i = 0; i < args.length; i++) {
-      if (args[i].equals("--dump-config") || args[i].startsWith("--dump-config=")) {
-        final String[] parts = args[i].split("=", 2);
+  /**
+   * Instructs this utility to scan the main command-line arguments for the request
+   * to dump configuration. If matched, the process will be exited.
+   */
+  public static void process(String[] args) {
+    for (String arg : args) {
+      if (arg.equals("--dump-config") || arg.startsWith("--dump-config=")) {
+        final String[] parts = arg.split("=", 2);
         if (parts.length == 1) {
           dumpConfig(Collections.emptyList());
-        }
-        else {
+        } else {
           final String[] patterns = parts[1].split("\\s*,\\s*");
           dumpConfig(Arrays.asList(patterns));
         }
       }
-    }
-
-    return new Chained();
-  }
-
-  public static class Chained {
-    public void or(Runnable runnable) {
-      runnable.run();
     }
   }
 
