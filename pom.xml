@@ -20,7 +20,6 @@
       <artifactId>jetcd-core</artifactId>
       <version>${jetcd.version}</version>
     </dependency>
-
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-web</artifactId>
@@ -36,9 +35,8 @@
       <artifactId>javax.servlet-api</artifactId>
     </dependency>
     <dependency>
-      <!-- Provides tomcat EL, the Unified Expression Language, not the web server -->
-      <groupId>org.apache.tomcat.embed</groupId>
-      <artifactId>tomcat-embed-el</artifactId>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-validation</artifactId>
     </dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>
