@@ -46,7 +46,7 @@
     <dependency>
       <groupId>com.github.mxsm</groupId>
       <artifactId>jetcd-launcher</artifactId>
-      <version>0.3.6</version>
+      <version>0.3.7</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
