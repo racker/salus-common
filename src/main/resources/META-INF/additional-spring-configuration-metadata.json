@@ -1,0 +1,20 @@
+{
+  "properties": [{
+    "name": "salus.environment",
+    "description": "Deployment environment designation that is used to differentiate application instances.",
+    "defaultValue": "local",
+    "type": "java.lang.String"
+  }],
+  "hints": [{
+    "name": "salus.environment",
+    "values": [{
+      "value": "local"
+    },{
+      "value": "dev"
+    }, {
+      "value": "staging"
+    }, {
+      "value": "prod"
+    }]
+  }]
+}
