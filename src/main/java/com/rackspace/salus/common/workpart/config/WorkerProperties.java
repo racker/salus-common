@@ -8,7 +8,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.convert.DurationUnit;
 import org.springframework.stereotype.Component;
 
-@ConfigurationProperties("worker")
+@ConfigurationProperties("salus.worker")
 @Component
 @Data
 public class WorkerProperties {
