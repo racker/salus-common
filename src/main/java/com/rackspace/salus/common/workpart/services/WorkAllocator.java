@@ -57,6 +57,7 @@ import org.springframework.stereotype.Service;
 @Slf4j
 public class WorkAllocator implements SmartLifecycle {
 
+  private static final int EXIT_CODE_ETCD_FAILED = 1;
   private final WorkerProperties properties;
   private final Client etcd;
   private final WorkProcessor processor;
@@ -111,7 +112,9 @@ public class WorkAllocator implements SmartLifecycle {
         .thenApply(leaseGrantResponse -> {
           leaseId = leaseGrantResponse.getID();
           log.info("Got lease={}, ourId={}", leaseId, ourId);
-          keepAliveClient = etcd.getLeaseClient().keepAlive(leaseId, Observers.<LeaseKeepAliveResponse>builder().build());
+          keepAliveClient = etcd.getLeaseClient().keepAlive(leaseId, Observers.<LeaseKeepAliveResponse>builder()
+              .onError(this::handleKeepAliveError)
+              .build());
           return leaseId;
         })
         .thenCompose(leaseId ->
@@ -125,6 +128,18 @@ public class WorkAllocator implements SmartLifecycle {
                       });
                 }))
         .join();
+  }
+
+  private void handleKeepAliveError(Throwable throwable) {
+    log.error("Error during keep alive processing", throwable);
+    // Spring will gracefully shutdown via shutdown hook
+    System.exit(EXIT_CODE_ETCD_FAILED);
+  }
+
+  private void handleWatcherError(Throwable throwable, String prefix) {
+    log.error("Error during watch of {}", prefix, throwable);
+    // Spring will gracefully shutdown via shutdown hook
+    System.exit(EXIT_CODE_ETCD_FAILED);
   }
 
   @Override
@@ -203,7 +218,8 @@ public class WorkAllocator implements SmartLifecycle {
                 .withPrefix(prefixBytes)
                 .withPrevKV(true)
                 .build(),
-            watchResponseConsumer
+            watchResponseConsumer,
+            throwable -> handleWatcherError(throwable, prefix)
         );
   }
 
