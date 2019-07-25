@@ -1,21 +1,26 @@
 package com.rackspace.salus.common.workpart.services;
 
+import static com.rackspace.salus.common.workpart.Bits.fromString;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
-import com.coreos.jetcd.Client;
-import com.coreos.jetcd.data.ByteSequence;
-import com.coreos.jetcd.data.KeyValue;
-import com.coreos.jetcd.kv.GetResponse;
-import com.coreos.jetcd.kv.TxnResponse;
-import com.coreos.jetcd.op.Cmp;
-import com.coreos.jetcd.op.CmpTarget;
-import com.coreos.jetcd.op.Op;
-import com.coreos.jetcd.options.GetOption;
-import com.coreos.jetcd.options.PutOption;
+import com.rackspace.salus.common.workpart.Bits;
+import com.rackspace.salus.common.workpart.Work;
+import com.rackspace.salus.common.workpart.WorkProcessor;
+import com.rackspace.salus.common.workpart.config.WorkerProperties;
+import io.etcd.jetcd.ByteSequence;
+import io.etcd.jetcd.Client;
+import io.etcd.jetcd.KeyValue;
+import io.etcd.jetcd.kv.GetResponse;
+import io.etcd.jetcd.kv.TxnResponse;
 import io.etcd.jetcd.launcher.junit.EtcdClusterResource;
-import java.net.URI;
+import io.etcd.jetcd.op.Cmp;
+import io.etcd.jetcd.op.CmpTarget;
+import io.etcd.jetcd.op.Op;
+import io.etcd.jetcd.options.GetOption;
+import io.etcd.jetcd.options.PutOption;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -32,10 +37,6 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import lombok.extern.slf4j.Slf4j;
-import com.rackspace.salus.common.workpart.Bits;
-import com.rackspace.salus.common.workpart.Work;
-import com.rackspace.salus.common.workpart.WorkProcessor;
-import com.rackspace.salus.common.workpart.config.WorkerProperties;
 import org.hamcrest.Matchers;
 import org.junit.After;
 import org.junit.Assert;
@@ -72,10 +73,9 @@ public class WorkAllocatorTest {
     workerProperties = new WorkerProperties();
     workerProperties.setPrefix("/"+testName.getMethodName()+"/");
 
-    final List<String> endpoints = etcd.cluster().getClientEndpoints().stream()
-        .map(URI::toString)
-        .collect(Collectors.toList());
-    client = Client.builder().endpoints(endpoints).build();
+    client = Client.builder().endpoints(
+        etcd.cluster().getClientEndpoints()
+    ).build();
 
     workAllocatorsInTest = new ArrayList<>();
   }
@@ -314,12 +314,11 @@ public class WorkAllocatorTest {
       throws ExecutionException, InterruptedException {
     final int actualWorkLoad = client.getKVClient()
         .get(
-            ByteSequence
-                .fromString(workerProperties.getPrefix() + Bits.WORKERS_SET + workAllocatorId)
+            fromString(workerProperties.getPrefix() + Bits.WORKERS_SET + workAllocatorId)
         )
         .thenApply(getResponse -> {
           final int actual = Integer
-              .parseInt(getResponse.getKvs().get(0).getValue().toStringUtf8(), 10);
+              .parseInt(getResponse.getKvs().get(0).getValue().toString(StandardCharsets.UTF_8), 10);
           return actual;
         })
         .get();
@@ -355,8 +354,7 @@ public class WorkAllocatorTest {
 
     bulkWorkProcessor.hasActiveWorkItems(totalWorkItems, 10000);
 
-    final ByteSequence activePrefix = ByteSequence
-        .fromString(workerProperties.getPrefix() + Bits.ACTIVE_SET);
+    final ByteSequence activePrefix = fromString(workerProperties.getPrefix() + Bits.ACTIVE_SET);
     final WorkItemSummary workItemSummary = client.getKVClient()
         .get(
             activePrefix,
@@ -368,7 +366,7 @@ public class WorkAllocatorTest {
           final WorkItemSummary result = new WorkItemSummary();
           for (KeyValue kv : getResponse.getKvs()) {
             result.activeWorkIds.add(Bits.extractIdFromKey(kv));
-            final String workerId = kv.getValue().toStringUtf8();
+            final String workerId = kv.getValue().toString(StandardCharsets.UTF_8);
             int load = result.workerLoad.getOrDefault(workerId, 0);
             result.workerLoad.put(workerId, load + 1);
           }
@@ -385,10 +383,10 @@ public class WorkAllocatorTest {
 
   @Test
   public void testVersionZeroAssumption() throws ExecutionException, InterruptedException {
-    final ByteSequence resultKey = ByteSequence.fromString("/result");
+    final ByteSequence resultKey = fromString("/result");
     final TxnResponse resp = client.getKVClient().txn()
-        .If(new Cmp(ByteSequence.fromString("/doesnotexist"), Cmp.Op.EQUAL, CmpTarget.version(0)))
-        .Then(Op.put(resultKey, ByteSequence.fromString("success"),
+        .If(new Cmp(fromString("/doesnotexist"), Cmp.Op.EQUAL, CmpTarget.version(0)))
+        .Then(Op.put(resultKey, fromString("success"),
             PutOption.DEFAULT
         ))
         .commit()
@@ -401,15 +399,15 @@ public class WorkAllocatorTest {
 
     assertEquals(
         "success",
-        getResponse.getKvs().get(0).getValue().toStringUtf8()
+        getResponse.getKvs().get(0).getValue().toString(StandardCharsets.UTF_8)
     );
   }
 
   @Test
   public void testAlwaysTrueTxnAssumption() throws ExecutionException, InterruptedException {
-    final ByteSequence resultKey = ByteSequence.fromString("/alwaysTrue");
+    final ByteSequence resultKey = fromString("/alwaysTrue");
     final TxnResponse resp = client.getKVClient().txn()
-        .Then(Op.put(resultKey, ByteSequence.fromString("true"),
+        .Then(Op.put(resultKey, fromString("true"),
             PutOption.DEFAULT
         ))
         .commit()
@@ -422,7 +420,7 @@ public class WorkAllocatorTest {
 
     assertEquals(
         "true",
-        getResponse.getKvs().get(0).getValue().toStringUtf8()
+        getResponse.getKvs().get(0).getValue().toString(StandardCharsets.UTF_8)
     );
   }
 

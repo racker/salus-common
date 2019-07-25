@@ -1,9 +1,10 @@
 package com.rackspace.salus.common.workpart;
 
-import com.coreos.jetcd.data.ByteSequence;
-import com.coreos.jetcd.data.KeyValue;
-import com.coreos.jetcd.watch.WatchEvent;
-import com.coreos.jetcd.watch.WatchEvent.EventType;
+import io.etcd.jetcd.ByteSequence;
+import io.etcd.jetcd.KeyValue;
+import io.etcd.jetcd.watch.WatchEvent;
+import io.etcd.jetcd.watch.WatchEvent.EventType;
+import java.nio.charset.StandardCharsets;
 
 public class Bits {
   public static final String REGISTRY_SET = "registry/";
@@ -16,12 +17,16 @@ public class Bits {
    */
   public static final String WORK_LOAD_FORMAT = "%010d";
 
+  public static ByteSequence fromString(String utf8string) {
+    return ByteSequence.from(utf8string, StandardCharsets.UTF_8);
+  }
+
   public static ByteSequence fromFormat(String format, Object... args) {
-    return ByteSequence.fromString(String.format(format, args));
+    return fromString(String.format(format, args));
   }
 
   public static String extractIdFromKey(KeyValue kv) {
-    final String key = kv.getKey().toStringUtf8();
+    final String key = kv.getKey().toString(StandardCharsets.UTF_8);
     final int pos = key.lastIndexOf('/');
     return key.substring(pos + 1);
   }
