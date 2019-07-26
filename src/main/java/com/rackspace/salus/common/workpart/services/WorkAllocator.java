@@ -1,40 +1,42 @@
 package com.rackspace.salus.common.workpart.services;
 
-import static com.coreos.jetcd.data.ByteSequence.fromString;
-import static com.coreos.jetcd.op.Op.delete;
-import static com.coreos.jetcd.op.Op.put;
 import static com.rackspace.salus.common.workpart.Bits.ACTIVE_SET;
 import static com.rackspace.salus.common.workpart.Bits.REGISTRY_SET;
 import static com.rackspace.salus.common.workpart.Bits.WORKERS_SET;
 import static com.rackspace.salus.common.workpart.Bits.WORK_LOAD_FORMAT;
 import static com.rackspace.salus.common.workpart.Bits.extractIdFromKey;
 import static com.rackspace.salus.common.workpart.Bits.fromFormat;
+import static com.rackspace.salus.common.workpart.Bits.fromString;
 import static com.rackspace.salus.common.workpart.Bits.isDeleteKeyEvent;
 import static com.rackspace.salus.common.workpart.Bits.isNewKeyEvent;
 import static com.rackspace.salus.common.workpart.Bits.isUpdateKeyEvent;
+import static io.etcd.jetcd.op.Op.delete;
+import static io.etcd.jetcd.op.Op.put;
 
-import com.coreos.jetcd.Client;
-import com.coreos.jetcd.Lease.KeepAliveListener;
-import com.coreos.jetcd.Watch.Watcher;
-import com.coreos.jetcd.common.exception.ClosedClientException;
-import com.coreos.jetcd.data.ByteSequence;
-import com.coreos.jetcd.data.KeyValue;
-import com.coreos.jetcd.kv.DeleteResponse;
-import com.coreos.jetcd.kv.GetResponse;
-import com.coreos.jetcd.op.Cmp;
-import com.coreos.jetcd.op.CmpTarget;
-import com.coreos.jetcd.options.DeleteOption;
-import com.coreos.jetcd.options.GetOption;
-import com.coreos.jetcd.options.GetOption.SortOrder;
-import com.coreos.jetcd.options.GetOption.SortTarget;
-import com.coreos.jetcd.options.PutOption;
-import com.coreos.jetcd.options.WatchOption;
-import com.coreos.jetcd.watch.WatchEvent;
-import com.coreos.jetcd.watch.WatchResponse;
 import com.rackspace.salus.common.workpart.Bits;
 import com.rackspace.salus.common.workpart.Work;
 import com.rackspace.salus.common.workpart.WorkProcessor;
 import com.rackspace.salus.common.workpart.config.WorkerProperties;
+import io.etcd.jetcd.ByteSequence;
+import io.etcd.jetcd.Client;
+import io.etcd.jetcd.CloseableClient;
+import io.etcd.jetcd.KeyValue;
+import io.etcd.jetcd.Observers;
+import io.etcd.jetcd.Watch.Watcher;
+import io.etcd.jetcd.kv.DeleteResponse;
+import io.etcd.jetcd.kv.GetResponse;
+import io.etcd.jetcd.lease.LeaseKeepAliveResponse;
+import io.etcd.jetcd.op.Cmp;
+import io.etcd.jetcd.op.CmpTarget;
+import io.etcd.jetcd.options.DeleteOption;
+import io.etcd.jetcd.options.GetOption;
+import io.etcd.jetcd.options.GetOption.SortOrder;
+import io.etcd.jetcd.options.GetOption.SortTarget;
+import io.etcd.jetcd.options.PutOption;
+import io.etcd.jetcd.options.WatchOption;
+import io.etcd.jetcd.watch.WatchEvent;
+import io.etcd.jetcd.watch.WatchResponse;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Deque;
 import java.util.Iterator;
@@ -48,17 +50,18 @@ import java.util.function.Consumer;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.SmartLifecycle;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
+import org.springframework.scheduling.TaskScheduler;
 import org.springframework.stereotype.Service;
 
 @Service
 @Slf4j
 public class WorkAllocator implements SmartLifecycle {
 
+  private static final int EXIT_CODE_ETCD_FAILED = 1;
   private final WorkerProperties properties;
   private final Client etcd;
   private final WorkProcessor processor;
-  private final ThreadPoolTaskScheduler taskScheduler;
+  private final TaskScheduler taskScheduler;
   private final String prefix;
   private String ourId;
   private long leaseId;
@@ -66,13 +69,15 @@ public class WorkAllocator implements SmartLifecycle {
   private Semaphore workChangeSem = new Semaphore(1);
   private boolean running;
   private Deque<String> ourWork = new ConcurrentLinkedDeque<>();
-  private ScheduledFuture<?> schedule;
   private ScheduledFuture<?> scheduledRebalance;
-  private KeepAliveListener keepAliveListener;
+  private CloseableClient keepAliveClient;
+  private Watcher activeWatcher;
+  private Watcher registryWatcher;
+  private Watcher workersWatcher;
 
   @Autowired
   public WorkAllocator(WorkerProperties properties, Client etcd, WorkProcessor processor,
-      ThreadPoolTaskScheduler taskScheduler) {
+      TaskScheduler taskScheduler) {
     this.properties = properties;
     this.etcd = etcd;
     this.processor = processor;
@@ -107,7 +112,9 @@ public class WorkAllocator implements SmartLifecycle {
         .thenApply(leaseGrantResponse -> {
           leaseId = leaseGrantResponse.getID();
           log.info("Got lease={}, ourId={}", leaseId, ourId);
-          keepAliveListener = etcd.getLeaseClient().keepAlive(leaseId);
+          keepAliveClient = etcd.getLeaseClient().keepAlive(leaseId, Observers.<LeaseKeepAliveResponse>builder()
+              .onError(this::handleKeepAliveError)
+              .build());
           return leaseId;
         })
         .thenCompose(leaseId ->
@@ -121,6 +128,18 @@ public class WorkAllocator implements SmartLifecycle {
                       });
                 }))
         .join();
+  }
+
+  private void handleKeepAliveError(Throwable throwable) {
+    log.error("Error during keep alive processing", throwable);
+    // Spring will gracefully shutdown via shutdown hook
+    System.exit(EXIT_CODE_ETCD_FAILED);
+  }
+
+  private void handleWatcherError(Throwable throwable, String prefix) {
+    log.error("Error during watch of {}", prefix, throwable);
+    // Spring will gracefully shutdown via shutdown hook
+    System.exit(EXIT_CODE_ETCD_FAILED);
   }
 
   @Override
@@ -137,12 +156,16 @@ public class WorkAllocator implements SmartLifecycle {
 
     log.info("Stopping WorkAllocator ourId={}", ourId);
 
-    keepAliveListener.close();
+    keepAliveClient.close();
 
     running = false;
     if (scheduledRebalance != null) {
       scheduledRebalance.cancel(false);
     }
+
+    closeWatcher(activeWatcher);
+    closeWatcher(registryWatcher);
+    closeWatcher(workersWatcher);
 
     final Iterator<String> it = ourWork.iterator();
     while (it.hasNext()) {
@@ -163,6 +186,12 @@ public class WorkAllocator implements SmartLifecycle {
         });
   }
 
+  private void closeWatcher(Watcher watcher) {
+    if (watcher != null) {
+      watcher.close();
+    }
+  }
+
   @Override
   public boolean isRunning() {
     return running;
@@ -177,39 +206,21 @@ public class WorkAllocator implements SmartLifecycle {
     return ourId;
   }
 
-  private void buildWatcher(String prefix,
-      long revision, Consumer<WatchResponse> watchResponseConsumer) {
+  private Watcher buildWatcher(String prefix,
+                               long revision,
+                               Consumer<WatchResponse> watchResponseConsumer) {
     final ByteSequence prefixBytes = fromString(prefix);
-    final Watcher watcher = etcd.getWatchClient()
+    return etcd.getWatchClient()
         .watch(
             prefixBytes,
             WatchOption.newBuilder()
                 .withRevision(revision)
                 .withPrefix(prefixBytes)
                 .withPrevKV(true)
-                .build()
+                .build(),
+            watchResponseConsumer,
+            throwable -> handleWatcherError(throwable, prefix)
         );
-
-    taskScheduler.submit(() -> {
-      log.info("Watching {}", prefix);
-      while (running) {
-        try {
-          final WatchResponse watchResponse = watcher.listen();
-          if (running) {
-            watchResponseConsumer.accept(watchResponse);
-          }
-        } catch (ClosedClientException e) {
-          log.debug("Stopping watching of {}", prefix);
-          return;
-        } catch (InterruptedException e) {
-          log.debug("Interrupted while watching {}", prefix);
-        } catch (Exception e) {
-          log.warn("Failed while watching {}", prefix, e);
-          return;
-        }
-      }
-      log.debug("Finished watching {}", prefix);
-    });
   }
 
   public CompletableFuture<Work> createWork(String content) {
@@ -217,8 +228,8 @@ public class WorkAllocator implements SmartLifecycle {
 
     return etcd.getKVClient()
         .put(
-            ByteSequence.fromString(prefix + REGISTRY_SET + id),
-            ByteSequence.fromString(content)
+            fromString(prefix + REGISTRY_SET + id),
+            fromString(content)
         )
         .thenApply(putResponse ->
             new Work()
@@ -231,8 +242,8 @@ public class WorkAllocator implements SmartLifecycle {
   public CompletableFuture<Work> updateWork(String id, String content) {
     return etcd.getKVClient()
         .put(
-            ByteSequence.fromString(prefix + REGISTRY_SET + id),
-            ByteSequence.fromString(content)
+            fromString(prefix + REGISTRY_SET + id),
+            fromString(content)
         )
         .thenApply(putResponse ->
             new Work()
@@ -249,13 +260,13 @@ public class WorkAllocator implements SmartLifecycle {
   public CompletableFuture<Long> deleteWork(String id) {
     return etcd.getKVClient()
         .delete(
-            ByteSequence.fromString(prefix + REGISTRY_SET + id)
+            fromString(prefix + REGISTRY_SET + id)
         )
         .thenApply(DeleteResponse::getDeleted);
   }
 
   private void watchActive() {
-    buildWatcher(prefix + ACTIVE_SET, 0, watchResponse -> {
+    activeWatcher = buildWatcher(prefix + ACTIVE_SET, 0, watchResponse -> {
       log.debug("Saw active={}", watchResponse);
 
       for (WatchEvent event : watchResponse.getEvents()) {
@@ -284,7 +295,7 @@ public class WorkAllocator implements SmartLifecycle {
             handleReadyWork(WorkTransition.STARTUP, kv);
           }
 
-          buildWatcher(
+          registryWatcher = buildWatcher(
               prefix + REGISTRY_SET,
               getResponse.getHeader().getRevision(),
               watchResponse -> {
@@ -309,7 +320,7 @@ public class WorkAllocator implements SmartLifecycle {
 
     if (ourWork.contains(workId)) {
       log.info("Updated our work={}", workId);
-      processor.update(workId, kv.getValue().toStringUtf8());
+      processor.update(workId, kv.getValue().toString(StandardCharsets.UTF_8));
     }
   }
 
@@ -320,7 +331,7 @@ public class WorkAllocator implements SmartLifecycle {
       log.info("Stopping our work={}", workId);
 
       try {
-        releaseWork(workId, kv.getValue().toStringUtf8());
+        releaseWork(workId, kv.getValue().toString(StandardCharsets.UTF_8));
       } catch (InterruptedException e) {
         log.warn("Interrupted while releasing registered work={}", workId);
       }
@@ -333,7 +344,7 @@ public class WorkAllocator implements SmartLifecycle {
   }
 
   private void watchWorkers() {
-    buildWatcher(prefix + WORKERS_SET, 0, watchResponse -> {
+    workersWatcher = buildWatcher(prefix + WORKERS_SET, 0, watchResponse -> {
       log.debug("Saw worker={}", watchResponse);
 
       boolean rebalance = false;
@@ -577,7 +588,7 @@ public class WorkAllocator implements SmartLifecycle {
         .get(
             fromString(prefix + REGISTRY_SET + workId)
         )
-        .thenApply(getResponse -> getResponse.getKvs().get(0).getValue().toStringUtf8());
+        .thenApply(getResponse -> getResponse.getKvs().get(0).getValue().toString(StandardCharsets.UTF_8));
   }
 
   private CompletableFuture<Boolean> amILeastLoaded(long atRevision) {

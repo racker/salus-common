@@ -11,12 +11,12 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <java.version>11</java.version>
-    <jetcd.version>0.0.2</jetcd.version>
+    <jetcd.version>0.3.0</jetcd.version>
   </properties>
 
   <dependencies>
     <dependency>
-      <groupId>com.coreos</groupId>
+      <groupId>io.etcd</groupId>
       <artifactId>jetcd-core</artifactId>
       <version>${jetcd.version}</version>
     </dependency>
@@ -44,9 +44,9 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>com.github.mxsm</groupId>
+      <groupId>io.etcd</groupId>
       <artifactId>jetcd-launcher</artifactId>
-      <version>0.3.7</version>
+      <version>${jetcd.version}</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
