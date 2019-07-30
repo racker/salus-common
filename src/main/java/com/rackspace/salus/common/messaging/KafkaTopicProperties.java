@@ -50,4 +50,7 @@ public class KafkaTopicProperties {
 
   @NotEmpty
   String installs = "telemetry.installs.json";
+
+  @NotEmpty
+  String policies = "telemetry.policies.json";
 }
