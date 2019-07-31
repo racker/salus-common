@@ -38,6 +38,10 @@ import org.springframework.web.context.request.WebRequest;
  *   <code>application.yml</code> (or similar), which is why this configuration bean needs
  *   to be opted in with an <code>&#64;Import</code>.
  * </p>
+ * <p>
+ *   It is recommended for readability to just use {@link EnableExtendedErrorAttributes} instead of
+ *   directly {@link org.springframework.context.annotation.Import}ing this.
+ * </p>
  * @see com.rackspace.salus.common.env.LocalhostPropertySourceProcessor
  */
 @Configuration
