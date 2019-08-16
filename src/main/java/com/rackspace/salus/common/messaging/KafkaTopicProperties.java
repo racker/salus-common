@@ -53,4 +53,10 @@ public class KafkaTopicProperties {
 
   @NotEmpty
   String policies = "telemetry.policies.json";
+
+  @NotEmpty
+  String testMonitorRequests = "telemetry.test-monitor-requests.json";
+
+  @NotEmpty
+  String testMonitorResults = "telemetry.test-monitor-results.json";
 }
