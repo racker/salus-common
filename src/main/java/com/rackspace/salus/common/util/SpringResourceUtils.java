@@ -22,7 +22,7 @@ import java.io.InputStreamReader;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.util.FileCopyUtils;
 
-public class ResourceUtils {
+public class SpringResourceUtils {
 
   public static String readContent(String resource) throws IOException {
     try (InputStream in = new ClassPathResource(resource).getInputStream()) {
