@@ -17,6 +17,7 @@
 package com.rackspace.salus.common.web;
 
 import java.util.Map;
+import javax.annotation.Nullable;
 import javax.servlet.http.HttpServletRequest;
 import org.springframework.boot.web.servlet.error.ErrorAttributes;
 import org.springframework.http.HttpStatus;
@@ -62,9 +63,26 @@ public abstract class AbstractRestExceptionHandler {
 
   protected ResponseEntity<?> respondWith(HttpServletRequest request,
                                           HttpStatus status) {
+    return respondWith(request, status, null);
+  }
+
+  /**
+   * Leverages standard Spring Boot error attributes extraction, but allows for overriding the
+   * derived fields.
+   * @param request the request being handled, which obtained as a parameter of the {@link org.springframework.web.bind.annotation.ExceptionHandler}
+   * @param status the {@link HttpStatus} to report instead of the discovered value
+   * @param message if not null, replaces the auto-derived message field
+   * @return a {@link ResponseEntity} with a Spring Boot-standard error response body
+   */
+  protected ResponseEntity<?> respondWith(
+      HttpServletRequest request,
+      HttpStatus status, @Nullable String message) {
     Map<String, Object> body = getErrorAttributes(request);
     body.put("status", status.value());
     body.put("error", status.getReasonPhrase());
+    if (message != null) {
+      body.put("message", message);
+    }
     return new ResponseEntity<>(body, status);
   }
 
