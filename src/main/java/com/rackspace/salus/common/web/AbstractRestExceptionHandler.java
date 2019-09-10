@@ -19,9 +19,11 @@ package com.rackspace.salus.common.web;
 import java.util.Map;
 import javax.annotation.Nullable;
 import javax.servlet.http.HttpServletRequest;
+import org.hibernate.JDBCException;
 import org.springframework.boot.web.servlet.error.ErrorAttributes;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.context.request.ServletWebRequest;
 
 /**
@@ -64,6 +66,12 @@ public abstract class AbstractRestExceptionHandler {
   protected ResponseEntity<?> respondWith(HttpServletRequest request,
                                           HttpStatus status) {
     return respondWith(request, status, null);
+  }
+
+  @ExceptionHandler({JDBCException.class})
+  public ResponseEntity<?> handleJDBCException(
+      HttpServletRequest request) {
+    return respondWith(request, HttpStatus.INTERNAL_SERVER_ERROR, "The API is currently experiencing a problem. Please try again in a few minutes.");
   }
 
   /**
