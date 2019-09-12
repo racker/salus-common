@@ -19,11 +19,9 @@ package com.rackspace.salus.common.web;
 import java.util.Map;
 import javax.annotation.Nullable;
 import javax.servlet.http.HttpServletRequest;
-import org.hibernate.JDBCException;
 import org.springframework.boot.web.servlet.error.ErrorAttributes;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.context.request.ServletWebRequest;
 
 /**
@@ -67,8 +65,6 @@ public abstract class AbstractRestExceptionHandler {
                                           HttpStatus status) {
     return respondWith(request, status, null);
   }
-
-
 
   /**
    * Leverages standard Spring Boot error attributes extraction, but allows for overriding the
