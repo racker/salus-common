@@ -68,11 +68,7 @@ public abstract class AbstractRestExceptionHandler {
     return respondWith(request, status, null);
   }
 
-  @ExceptionHandler({JDBCException.class})
-  public ResponseEntity<?> handleJDBCException(
-      HttpServletRequest request) {
-    return respondWith(request, HttpStatus.INTERNAL_SERVER_ERROR, "The API is currently experiencing a problem. Please try again in a few minutes.");
-  }
+
 
   /**
    * Leverages standard Spring Boot error attributes extraction, but allows for overriding the
