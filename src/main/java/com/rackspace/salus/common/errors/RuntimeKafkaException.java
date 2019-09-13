@@ -1,8 +1,7 @@
 package com.rackspace.salus.common.errors;
 
 /**
- * We are creating this Runtime exception for Kafka so that we can track it and give a relevant message
- * to customers when Kafka is down
+ * Thrown after catching either an InterruptedException or an ExecutionException when attempting to send data through to Kafka.
  */
 public class RuntimeKafkaException extends RuntimeException {
 
