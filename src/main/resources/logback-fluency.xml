@@ -15,6 +15,7 @@
   -->
 
 <included>
+  <springProperty scope="context" name="SPRING_APPLICATION_NAME" source="spring.application.name"/>
   <springProperty scope="context" name="SALUS_FLUENTD_HOST" source="salus.fluentd.host"
     defaultValue="localhost"/>
   <springProperty scope="context" name="SALUS_FLUENTD_PORT" source="salus.fluentd.port"
@@ -28,14 +29,14 @@
     defaultValue="10000"/>
 
   <appender name="FLUENCY_SYNC" class="ch.qos.logback.more.appenders.FluencyLogbackAppender">
-    <tag>salus</tag>
+    <tag>application.${SPRING_APPLICATION_NAME}</tag>
 
     <!-- Host name/address and port number which Flentd placed -->
     <remoteHost>${SALUS_FLUENTD_HOST}</remoteHost>
     <port>${SALUS_FLUENTD_PORT}</port>
 
     <encoder>
-      <pattern><![CDATA[%date{HH:mm:ss.SSS} [%thread] %-5level %logger{15}#%line %msg]]></pattern>
+      <pattern>${FILE_LOG_PATTERN}</pattern>
     </encoder>
   </appender>
 
