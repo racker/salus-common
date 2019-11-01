@@ -43,6 +43,15 @@
       <artifactId>guava</artifactId>
       <version>27.0.1-jre</version>
     </dependency>
+    <dependency>
+      <groupId>org.springframework.kafka</groupId>
+      <artifactId>spring-kafka</artifactId>
+      <!--
+      Marked optional to ensure non-kafka apps aren't forced to include this transitively.
+      Applications that use EnableSalusKafkaMessaging must declare a spring-kafka dependency.
+      -->
+      <optional>true</optional>
+    </dependency>
 
     <dependency>
       <groupId>org.projectlombok</groupId>
