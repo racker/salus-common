@@ -16,6 +16,7 @@
 
 <included>
   <springProperty scope="context" name="SPRING_APPLICATION_NAME" source="spring.application.name"/>
+  <springProperty scope="context" name="OUR_HOSTNAME" source="localhost.name"/>
   <springProperty scope="context" name="SALUS_FLUENTD_HOST" source="salus.fluentd.host"
     defaultValue="localhost"/>
   <springProperty scope="context" name="SALUS_FLUENTD_PORT" source="salus.fluentd.port"
@@ -34,6 +35,11 @@
     <!-- Host name/address and port number which Flentd placed -->
     <remoteHost>${SALUS_FLUENTD_HOST}</remoteHost>
     <port>${SALUS_FLUENTD_PORT}</port>
+
+    <additionalField>
+      <key>host</key>
+      <value>${OUR_HOSTNAME}</value>
+    </additionalField>
 
     <encoder>
       <pattern>${FILE_LOG_PATTERN}</pattern>
