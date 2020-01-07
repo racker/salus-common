@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Rackspace US, Inc.
+ * Copyright 2020 Rackspace US, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,9 +32,6 @@ public class KafkaTopicProperties {
 
   @NotEmpty
   String metrics = "telemetry.metrics.json";
-
-  @NotEmpty
-  String events = "telemetry.events.json";
 
   @NotEmpty
   String attaches = "telemetry.attaches.json";
