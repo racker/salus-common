@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Rackspace US, Inc.
+ * Copyright 2020 Rackspace US, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -68,6 +68,8 @@ import org.springframework.web.context.request.ServletWebRequest;
 @Slf4j
 public abstract class AbstractRestExceptionHandler {
 
+  private static final String SLEUTH_BRAVE_TRACE_ID_HEADER = "x-b3-traceid";
+
   private final ErrorAttributes errorAttributes;
 
   public AbstractRestExceptionHandler(
@@ -92,6 +94,12 @@ public abstract class AbstractRestExceptionHandler {
       HttpServletRequest request,
       HttpStatus status, @Nullable String message) {
     Map<String, Object> body = getErrorAttributes(request);
+    // extract Spring Cloud Sleuth (aka Brave)'s traceId from incoming request headers to avoid
+    // pulling dependency into common module
+    final String traceId = request.getHeader(SLEUTH_BRAVE_TRACE_ID_HEADER);
+    if (traceId != null) {
+      body.put("traceId", traceId);
+    }
     body.put("status", status.value());
     body.put("error", status.getReasonPhrase());
     if (message != null) {
