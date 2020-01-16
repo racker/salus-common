@@ -68,6 +68,8 @@ import org.springframework.web.context.request.ServletWebRequest;
 @Slf4j
 public abstract class AbstractRestExceptionHandler {
 
+  private static final String SLEUTH_BRAVE_TRACE_ID_HEADER = "x-b3-traceid";
+
   private final ErrorAttributes errorAttributes;
 
   public AbstractRestExceptionHandler(
@@ -94,7 +96,7 @@ public abstract class AbstractRestExceptionHandler {
     Map<String, Object> body = getErrorAttributes(request);
     // extract Spring Cloud Sleuth (aka Brave)'s traceId from incoming request headers to avoid
     // pulling dependency into common module
-    final String traceId = request.getHeader("x-b3-traceid");
+    final String traceId = request.getHeader(SLEUTH_BRAVE_TRACE_ID_HEADER);
     if (traceId != null) {
       body.put("traceId", traceId);
     }
