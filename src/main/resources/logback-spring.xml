@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  ~ Copyright 2019 Rackspace US, Inc.
+  ~ Copyright 2020 Rackspace US, Inc.
   ~
   ~ Licensed under the Apache License, Version 2.0 (the "License");
   ~ you may not use this file except in compliance with the License.
@@ -25,11 +25,9 @@
   </springProfile>
 
   <root level="INFO">
+    <appender-ref ref="CONSOLE"/>
     <springProfile name="production">
       <appender-ref ref="FLUENCY" />
-    </springProfile>
-    <springProfile name="!production">
-      <appender-ref ref="CONSOLE"/>
     </springProfile>
   </root>
 
