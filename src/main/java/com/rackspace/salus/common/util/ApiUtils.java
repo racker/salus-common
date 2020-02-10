@@ -25,7 +25,8 @@ public class ApiUtils {
   static final List<String> requiredHeaders = List.of(
       "X-Tenant-Id",
       "X-Roles",
-      "X-Impersonation-Roles"
+      "X-Impersonation-Roles",
+      "Content-Type"
   );
 
   public static void applyRequiredHeaders(ProxyExchange proxyExchange, HttpHeaders headers) {
