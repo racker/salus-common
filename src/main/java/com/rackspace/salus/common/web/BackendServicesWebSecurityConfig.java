@@ -27,6 +27,12 @@ import org.springframework.security.web.authentication.www.BasicAuthenticationFi
 import org.springframework.security.web.firewall.DefaultHttpFirewall;
 import org.springframework.security.web.firewall.HttpFirewall;
 
+/**
+ * This class is used to populate roles into the spring security context.
+ *
+ * That context will later be used by {@link RoleBasedJsonViewControllerAdvice} to perform
+ * specific json view serializations based on the access level the roles provide.
+ */
 @Configuration
 @EnableWebSecurity
 @Slf4j

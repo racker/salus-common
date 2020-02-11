@@ -35,6 +35,10 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.mvc.method.annotation.AbstractMappingJacksonResponseBodyAdvice;
 
 
+/**
+ * Uses the roles populated in the spring security context by {@link BackendServicesWebSecurityConfig}
+ * to determine what json view should be used when serializing the api response object.
+ */
 @RestControllerAdvice
 @Import(RoleProperties.class)
 public class RoleBasedJsonViewControllerAdvice extends AbstractMappingJacksonResponseBodyAdvice {
