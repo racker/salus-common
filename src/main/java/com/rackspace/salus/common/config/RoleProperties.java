@@ -19,7 +19,6 @@ package com.rackspace.salus.common.config;
 import java.util.Map;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.stereotype.Component;
 
 @ConfigurationProperties("salus.common.roles")
 @Data
