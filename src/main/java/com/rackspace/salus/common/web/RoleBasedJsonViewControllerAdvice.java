@@ -23,7 +23,6 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 import org.apache.commons.lang3.ClassUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.core.MethodParameter;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.json.MappingJacksonValue;
@@ -40,7 +39,6 @@ import org.springframework.web.servlet.mvc.method.annotation.AbstractMappingJack
  * to determine what json view should be used when serializing the api response object.
  */
 @RestControllerAdvice
-@EnableConfigurationProperties(RoleProperties.class)
 public class RoleBasedJsonViewControllerAdvice extends AbstractMappingJacksonResponseBodyAdvice {
 
   private RoleProperties roleProperties;
