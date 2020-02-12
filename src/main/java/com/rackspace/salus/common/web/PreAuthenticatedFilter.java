@@ -66,6 +66,7 @@ public class PreAuthenticatedFilter extends GenericFilterBean {
   }
 
   Optional<PreAuthenticatedToken> getToken(HttpServletRequest req) {
+    log.debug("Getting PreAuthenticatedToken for request");
     final Set<String> rolesSet = new HashSet<>();
     for (String header : rolesHeaders) {
       String roleString = req.getHeader(header);
