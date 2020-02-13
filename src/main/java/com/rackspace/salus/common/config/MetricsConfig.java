@@ -21,6 +21,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.actuate.autoconfigure.metrics.MeterRegistryCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
 
 /**
  * Customizes the application's {@link MeterRegistry} by adding tags to qualify this application
@@ -35,8 +37,11 @@ public class MetricsConfig {
   private final String ourHostname;
   private final String appName;
 
-  public MetricsConfig(@Value("${spring.application.name}") String appName,
+  public MetricsConfig(@Value("${spring.application.name:}") String appName,
                        @Value("${localhost.name}") String ourHostName) {
+    Assert.state(StringUtils.hasText(appName),
+        "spring.application.name property needs to be set");
+
     this.appName = appName;
     this.ourHostname = ourHostName;
   }

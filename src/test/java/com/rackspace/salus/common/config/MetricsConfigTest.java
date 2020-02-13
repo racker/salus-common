@@ -33,6 +33,8 @@ import org.springframework.test.context.junit4.SpringRunner;
     MetricsAutoConfiguration.class,
     CompositeMeterRegistryAutoConfiguration.class,
     MetricsConfig.class
+}, properties = {
+    "spring.application.name=some-test-app"
 })
 public class MetricsConfigTest {
 
