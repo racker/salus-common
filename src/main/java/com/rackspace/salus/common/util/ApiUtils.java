@@ -25,7 +25,7 @@ public class ApiUtils {
   static final List<String> requiredHeaders = List.of(
       "Requested-Tenant-Id",
       "X-Roles",
-      "X-Impersonation-Roles",
+      "X-Impersonator-Roles",
       "Content-Type"
   );
 
