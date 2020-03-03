@@ -23,7 +23,7 @@ import org.springframework.http.HttpHeaders;
 public class ApiUtils {
 
   static final List<String> requiredHeaders = List.of(
-      "X-Tenant-Id",
+      "Requested-Tenant-Id",
       "X-Roles",
       "X-Impersonation-Roles",
       "Content-Type"
