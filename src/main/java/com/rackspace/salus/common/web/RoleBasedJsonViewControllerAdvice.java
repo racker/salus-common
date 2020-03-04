@@ -72,7 +72,7 @@ public class RoleBasedJsonViewControllerAdvice extends AbstractMappingJacksonRes
           // i.e. the one with the greater access permissions
           .max(Comparator.comparing(view -> ClassUtils.getAllInterfaces(view).size()))
           .orElseThrow(() ->
-              // this can only occur if an requested-tenant-id header is provided and the given roles
+              // this can only occur if an x-tenant-id header is provided and the given roles
               // are not valid.
               // this should not happen since one of those roles is required to pass repose's validation.
               new IllegalArgumentException(String.format("No authorized roles found %s",
