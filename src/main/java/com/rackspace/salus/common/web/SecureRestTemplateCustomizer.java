@@ -17,6 +17,7 @@
 package com.rackspace.salus.common.web;
 
 import java.net.URL;
+import java.util.Arrays;
 import javax.net.ssl.SSLContext;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.client.HttpClient;
@@ -61,6 +62,9 @@ public class SecureRestTemplateCustomizer implements RestTemplateCustomizer {
           .build();
     } catch (Exception e) {
       throw new IllegalStateException("Failed to setup client SSL context", e);
+    } finally {
+      // it's good security practice to zero out passwords, which is why they're char[]
+      Arrays.fill(properties.getTrustStorePassword(), (char) 0);
     }
 
     final HttpClient httpClient = HttpClientBuilder.create()
