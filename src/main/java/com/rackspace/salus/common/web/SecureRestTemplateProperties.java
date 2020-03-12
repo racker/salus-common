@@ -21,7 +21,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 
 @ConfigurationProperties("salus.restclient.ssl")
 @Data
-public class SslRestClientProperties {
+public class SecureRestTemplateProperties {
 
   /**
    * URL location, typically with file:// scheme, of a CA trust store file in JKS format.

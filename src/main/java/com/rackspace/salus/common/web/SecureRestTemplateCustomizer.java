@@ -32,20 +32,20 @@ import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.web.client.RestTemplate;
 
 /**
- * This component can be <code>Import</code>ed to enable conditional SSL/TLS customization of
- * {@link RestTemplate} instances built via {@link RestTemplateBuilder}.
- * It obtains the trust store, store password, and protocol configuration via the {@link SslRestClientProperties}
- * component.
+ * This component conditionally enables SSL/TLS customization of {@link RestTemplate} instances
+ * built via {@link RestTemplateBuilder}.
+ * It obtains the trust store, store password, and protocol configuration via the {@link SecureRestTemplateProperties}
+ * component and only activates when the trust store location is configured.
  */
 @ConditionalOnProperty("salus.restclient.ssl.trust-store")
-@EnableConfigurationProperties(SslRestClientProperties.class)
+@EnableConfigurationProperties(SecureRestTemplateProperties.class)
 @Slf4j
-public class SslRestTemplateCustomizer implements RestTemplateCustomizer {
+public class SecureRestTemplateCustomizer implements RestTemplateCustomizer {
 
-  private final SslRestClientProperties properties;
+  private final SecureRestTemplateProperties properties;
 
   @Autowired
-  public SslRestTemplateCustomizer(SslRestClientProperties properties) {
+  public SecureRestTemplateCustomizer(SecureRestTemplateProperties properties) {
     this.properties = properties;
   }
 
