@@ -20,7 +20,7 @@ package com.rackspace.salus.common.util;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertThat;
 
-import com.rackspace.salus.common.util.BooleanParser.BooleanFormatException;
+import com.rackspace.salus.common.errors.BooleanFormatException;
 import org.junit.Test;
 
 public class BooleanParserTest {

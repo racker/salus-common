@@ -15,20 +15,11 @@
  *
  */
 
-package com.rackspace.salus.common.util;
+package com.rackspace.salus.common.errors;
 
-import com.rackspace.salus.common.errors.BooleanFormatException;
+public class BooleanFormatException extends Exception {
 
-public class BooleanParser {
-
-  public static boolean parseBoolean(String boolValue) throws BooleanFormatException {
-    if("true".compareToIgnoreCase(boolValue) == 0) {
-      return true;
-    }else if ("false".compareToIgnoreCase(boolValue) == 0) {
-      return false;
-    }
-    throw new BooleanFormatException(String.format("%s is not a valid boolean value", boolValue));
+  public BooleanFormatException(String s) {
+    super(s);
   }
-
-
 }
