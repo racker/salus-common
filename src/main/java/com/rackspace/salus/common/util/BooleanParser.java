@@ -29,6 +29,7 @@ public class BooleanParser {
    * @throws BooleanFormatException If the text is not case insensitive 'true' or 'false'
    */
   public static boolean parseBoolean(String boolValue) {
+
     if("true".equalsIgnoreCase(boolValue)) {
       return true;
     }else if ("false".equalsIgnoreCase(boolValue)) {
