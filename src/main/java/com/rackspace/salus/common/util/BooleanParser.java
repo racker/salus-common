@@ -21,6 +21,13 @@ import com.rackspace.salus.common.errors.BooleanFormatException;
 
 public class BooleanParser {
 
+  /**
+   * Parses the string argument as a boolean. Utility function for making sure the string value is
+   * exactly 'true' or 'false' case insensitive.
+   * @param boolValue
+   * @return parsed boolean value
+   * @throws BooleanFormatException If the text is not case insensitive 'true' or 'false'
+   */
   public static boolean parseBoolean(String boolValue) throws BooleanFormatException {
     if("true".equalsIgnoreCase(boolValue)) {
       return true;
