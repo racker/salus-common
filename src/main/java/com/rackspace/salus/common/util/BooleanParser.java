@@ -22,9 +22,9 @@ import com.rackspace.salus.common.errors.BooleanFormatException;
 public class BooleanParser {
 
   public static boolean parseBoolean(String boolValue) throws BooleanFormatException {
-    if("true".compareToIgnoreCase(boolValue) == 0) {
+    if("true".equalsIgnoreCase(boolValue)) {
       return true;
-    }else if ("false".compareToIgnoreCase(boolValue) == 0) {
+    }else if ("false".equalsIgnoreCase(boolValue)) {
       return false;
     }
     throw new BooleanFormatException(String.format("%s is not a valid boolean value", boolValue));
