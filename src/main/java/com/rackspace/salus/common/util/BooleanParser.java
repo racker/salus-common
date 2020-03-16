@@ -28,13 +28,13 @@ public class BooleanParser {
    * @return parsed boolean value
    * @throws BooleanFormatException If the text is not case insensitive 'true' or 'false'
    */
-  public static boolean parseBoolean(String boolValue) throws BooleanFormatException {
+  public static boolean parseBoolean(String boolValue) {
     if("true".equalsIgnoreCase(boolValue)) {
       return true;
     }else if ("false".equalsIgnoreCase(boolValue)) {
       return false;
     }
-    throw new BooleanFormatException(String.format("%s is not a valid boolean value", boolValue));
+    throw new BooleanFormatException(String.format("'%s' is not a valid boolean value", boolValue));
   }
 
 
