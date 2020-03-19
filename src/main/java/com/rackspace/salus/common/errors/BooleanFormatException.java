@@ -17,7 +17,7 @@
 
 package com.rackspace.salus.common.errors;
 
-public class BooleanFormatException extends RuntimeException {
+public class BooleanFormatException extends Exception {
 
   public BooleanFormatException(String s) {
     super(s);
