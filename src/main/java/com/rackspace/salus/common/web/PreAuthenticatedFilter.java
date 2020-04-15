@@ -76,6 +76,7 @@ public class PreAuthenticatedFilter extends GenericFilterBean {
       }
     }
     final String tenant = req.getHeader(tenantHeader);
+    log.trace("Found tenant {} with roles {} while authenticating", tenant, rolesSet);
 
     if (!rolesSet.isEmpty() && (StringUtils.hasText(tenant))) {
       final List<SimpleGrantedAuthority> roles = rolesSet.stream()

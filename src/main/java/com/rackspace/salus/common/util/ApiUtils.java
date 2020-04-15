@@ -26,6 +26,7 @@ public class ApiUtils {
       "X-Tenant-Id",
       "X-Roles",
       "X-Impersonator-Roles",
+      "Requested-Tenant-Id",
       "Content-Type"
   );
 
