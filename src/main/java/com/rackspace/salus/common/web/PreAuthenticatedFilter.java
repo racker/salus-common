@@ -20,7 +20,6 @@ import static java.util.stream.Collectors.toList;
 
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -78,13 +77,6 @@ public class PreAuthenticatedFilter extends GenericFilterBean {
     }
     final String tenant = req.getHeader(tenantHeader);
     log.trace("Found tenant {} with roles {} while authenticating", tenant, rolesSet);
-    if (req.getHeaderNames() != null) {
-      for (Enumeration<String> e = req.getHeaderNames(); e.hasMoreElements(); ) {
-        String k = e.nextElement();
-        String v = req.getHeader(k);
-        log.info("Found header for preauthenticatedfilter: {}={}", k, v);
-      }
-    }
 
     if (!rolesSet.isEmpty() && (StringUtils.hasText(tenant))) {
       final List<SimpleGrantedAuthority> roles = rolesSet.stream()
