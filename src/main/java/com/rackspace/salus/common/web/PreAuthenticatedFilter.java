@@ -42,12 +42,18 @@ import org.springframework.web.filter.GenericFilterBean;
 @Slf4j
 public class PreAuthenticatedFilter extends GenericFilterBean {
 
+  // some requests don't come through with a `tenantHeader` to validate
+  // but do have a list of tenants to log for audit purposes.
+  private final static String EXTRA_TENANT_HEADER = "X-Tenant-Id";
+
   private final String tenantHeader;
   private final List<String> rolesHeaders;
+  private final boolean requireTenantId;
 
-  public PreAuthenticatedFilter(String tenantHeader, List<String> rolesHeaders) {
+  public PreAuthenticatedFilter(String tenantHeader, List<String> rolesHeaders, boolean requireTenantId) {
     this.tenantHeader = tenantHeader;
     this.rolesHeaders = rolesHeaders;
+    this.requireTenantId = requireTenantId;
   }
 
   @Override
@@ -76,9 +82,16 @@ public class PreAuthenticatedFilter extends GenericFilterBean {
       }
     }
     final String tenant = req.getHeader(tenantHeader);
+    final String tenantList = req.getHeader(EXTRA_TENANT_HEADER);
     log.trace("Found tenant {} with roles {} while authenticating", tenant, rolesSet);
 
-    if (!rolesSet.isEmpty() && (StringUtils.hasText(tenant))) {
+    if (requireTenantId && !StringUtils.hasText(tenant)) {
+      log.debug("Failed PreAuthenticatedToken creation due to missing {} header."
+          + " {}={}, roles={}", tenantHeader, EXTRA_TENANT_HEADER, tenantList, rolesSet);
+      return Optional.empty();
+    }
+
+    if (!rolesSet.isEmpty()) {
       final List<SimpleGrantedAuthority> roles = rolesSet.stream()
           .map(role ->
               role
@@ -91,8 +104,13 @@ public class PreAuthenticatedFilter extends GenericFilterBean {
 
       return Optional.of(new PreAuthenticatedToken(tenant, roles));
     } else {
-      log.debug("Skipping PreAuthenticatedToken creation for tenant={}, roles={}", tenant, rolesSet);
+      log.debug("Failed PreAuthenticatedToken creation due to empty roles list."
+          + " tenant={}, roles={}", tenant, rolesSet);
       return Optional.empty();
     }
+  }
+
+  private void returnNoAuthentication() {
+
   }
 }

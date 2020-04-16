@@ -44,7 +44,7 @@ public class PreAuthenticatedFilterTest {
   @Test
   public void testGetToken() {
     PreAuthenticatedFilter preAuthenticatedFilter = new PreAuthenticatedFilter(HEADER_TENANT,
-        Arrays.asList(HEADER_X_ROLES, HEADER_X_IMPERSONATOR_ROLES));
+        Arrays.asList(HEADER_X_ROLES, HEADER_X_IMPERSONATOR_ROLES), true);
     String userRoles = "monitoring:admin,dedicated:default,ticketing:admin,identity:user-admin";
     String impersonationRoles = "custom:my-admin,salus:admin";
     String tenantId = "12345";
@@ -70,7 +70,7 @@ public class PreAuthenticatedFilterTest {
   @Test
   public void testGetTokenNoRoles() {
     PreAuthenticatedFilter preAuthenticatedFilter = new PreAuthenticatedFilter(HEADER_TENANT,
-        Arrays.asList(HEADER_X_ROLES, HEADER_X_IMPERSONATOR_ROLES));
+        Arrays.asList(HEADER_X_ROLES, HEADER_X_IMPERSONATOR_ROLES), true);
     String tenantId = "12345";
 
     when(servletRequest.getHeader(HEADER_X_ROLES))
@@ -90,7 +90,7 @@ public class PreAuthenticatedFilterTest {
   @Test
   public void testGetTokenSomeRoles() {
     PreAuthenticatedFilter preAuthenticatedFilter = new PreAuthenticatedFilter(HEADER_TENANT,
-        Arrays.asList(HEADER_X_ROLES, HEADER_X_IMPERSONATOR_ROLES));
+        Arrays.asList(HEADER_X_ROLES, HEADER_X_IMPERSONATOR_ROLES), true);
     String userRoles = "monitoring:admin,dedicated:default,ticketing:admin,identity:user-admin";
     String tenantId = "12345";
 
@@ -115,7 +115,7 @@ public class PreAuthenticatedFilterTest {
   @Test
   public void testGetTokenNoTenant() {
     PreAuthenticatedFilter preAuthenticatedFilter = new PreAuthenticatedFilter(HEADER_TENANT,
-        Arrays.asList(HEADER_X_ROLES, HEADER_X_IMPERSONATOR_ROLES));
+        Arrays.asList(HEADER_X_ROLES, HEADER_X_IMPERSONATOR_ROLES), true);
     String userRoles = "monitoring:admin,dedicated:default,ticketing:admin,identity:user-admin";
     String impersonationRoles = "custom:my-admin,salus:admin";
 
