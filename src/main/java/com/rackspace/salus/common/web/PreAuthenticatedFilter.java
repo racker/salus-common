@@ -78,10 +78,12 @@ public class PreAuthenticatedFilter extends GenericFilterBean {
     }
     final String tenant = req.getHeader(tenantHeader);
     log.trace("Found tenant {} with roles {} while authenticating", tenant, rolesSet);
-    for (Enumeration<String> e = req.getHeaderNames(); e.hasMoreElements();) {
-      String k = e.nextElement();
-      String v = req.getHeader(k);
-      log.info("Found header for preauthenticatedfilter: {}={}", k, v);
+    if (req.getHeaderNames() != null) {
+      for (Enumeration<String> e = req.getHeaderNames(); e.hasMoreElements(); ) {
+        String k = e.nextElement();
+        String v = req.getHeader(k);
+        log.info("Found header for preauthenticatedfilter: {}={}", k, v);
+      }
     }
 
     if (!rolesSet.isEmpty() && (StringUtils.hasText(tenant))) {
