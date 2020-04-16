@@ -35,5 +35,5 @@ public class RoleProperties {
    * An anonymous role is used for unauthenticated requests.
    * i.e. internal service-to-service requests.
    */
-  Map<String, String> roleToView = Map.of("ROLE_ANONYMOUS", "ADMIN");
+  Map<String, String> roleToView = Map.of("ROLE_IDENTITY_ADMIN", "ADMIN");
 }

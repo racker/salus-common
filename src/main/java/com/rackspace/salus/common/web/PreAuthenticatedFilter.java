@@ -109,8 +109,4 @@ public class PreAuthenticatedFilter extends GenericFilterBean {
       return Optional.empty();
     }
   }
-
-  private void returnNoAuthentication() {
-
-  }
 }
