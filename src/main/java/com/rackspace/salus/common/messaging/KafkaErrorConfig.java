@@ -16,13 +16,17 @@
 
 package com.rackspace.salus.common.messaging;
 
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.header.Header;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.kafka.ConcurrentKafkaListenerContainerFactoryConfigurer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -34,6 +38,17 @@ import org.springframework.kafka.support.serializer.ErrorHandlingDeserializer2;
 @Slf4j
 public class KafkaErrorConfig {
 
+  MeterRegistry meterRegistry;
+
+  // dynamic metrics counters
+  private final Counter.Builder kafkaHandlerError;
+
+  @Autowired
+  public KafkaErrorConfig(Optional<MeterRegistry> meterRegistry) {
+    this.meterRegistry = meterRegistry.orElse(null);
+    kafkaHandlerError = Counter.builder("kafka_handler_errors");
+  }
+
   /**
    * Gets picked up by Spring Boot Kafka autoconfig and registered with the default.
    * This handler provides additional debug logging when {@link ErrorHandlingDeserializer2} is
@@ -44,9 +59,21 @@ public class KafkaErrorConfig {
   @Bean
   public ConsumerAwareErrorHandler listenerContainerErrorHandler() {
     return (e, data, consumer) -> {
-      final TopicPartition topicPartition = new TopicPartition(data.topic(), data.partition());
-      log.warn("Handling listener container error by skipping offset={} in={}", data.offset(), topicPartition, e);
+      final String topic = data.topic();
+      final int partition = data.partition();
+      final String messageType = data.value().getClass().getSimpleName();
+      final String messageValue = data.value().toString();
+
+      final TopicPartition topicPartition = new TopicPartition(topic, partition);
+      log.debug("Handling listener container error by skipping offset={} in={}", data.offset(), topicPartition, e);
       consumer.seek(topicPartition, data.offset()+1);
+
+      log.warn("Kafka Handler failed to process event={} on topic={} and partition={}, value={}",
+          messageType, topic, partition, messageValue, e);
+      if (meterRegistry != null) {
+        kafkaHandlerError.tags("messageType", messageType, "topic", topic, "partition", String.valueOf(partition))
+            .register(meterRegistry).increment();
+      }
 
       if (log.isDebugEnabled()) {
 
