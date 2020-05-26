@@ -18,6 +18,7 @@
 package com.rackspace.salus.common.web;
 
 import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
@@ -26,9 +27,8 @@ import org.springframework.web.util.WebUtils;
 /**
  * A filter to make sure that our inputs are properly URLdecode'ed
  *
- * To apply this to a particular project a configuration needs to be written
- * to apply this to specific URL patterns. It is likely ok to apply this to
- * every URI in a project.
+ * To apply this to a project add @EnableURLDecode to the main function that starts spring boot
+ * and this Filter will be applied to every URI registered with that project.
  */
 public class URLDecodeFilter implements Filter {
 
@@ -38,7 +38,8 @@ public class URLDecodeFilter implements Filter {
 
     HttpServletRequest req = (HttpServletRequest) servletRequest;
     req.setAttribute(
-        WebUtils.INCLUDE_SERVLET_PATH_ATTRIBUTE, URLDecoder.decode(req.getRequestURI(), "UTF-8"));
+        WebUtils.INCLUDE_SERVLET_PATH_ATTRIBUTE, URLDecoder.decode(req.getRequestURI(),
+            StandardCharsets.UTF_8));
 
     filterChain.doFilter(req, servletResponse);
   }
