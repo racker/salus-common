@@ -27,7 +27,7 @@ import org.springframework.web.util.WebUtils;
 /**
  * A filter to make sure that our inputs are properly URLdecode'ed
  *
- * To apply this to a project add @EnableURLDecode to the main function that starts spring boot
+ * To apply this to a project add {@link EnableURLDecode} to the main function that starts spring boot
  * and this Filter will be applied to every URI registered with that project.
  */
 public class URLDecodeFilter implements Filter {
