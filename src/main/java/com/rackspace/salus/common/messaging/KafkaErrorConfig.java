@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Rackspace US, Inc.
+ * Copyright 2020 Rackspace US, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -61,8 +61,9 @@ public class KafkaErrorConfig {
     return (e, data, consumer) -> {
       final String topic = data.topic();
       final int partition = data.partition();
-      final String messageType = data.value().getClass().getSimpleName();
-      final String messageValue = data.value().toString();
+      // for deserialization issues, only the exception will contain the attempted payload
+      final String messageType = data.value() != null ? data.value().getClass().getSimpleName() : null;
+      final String messageValue = data.value() != null ? data.value().toString() : null;
 
       final TopicPartition topicPartition = new TopicPartition(topic, partition);
       log.debug("Handling listener container error by skipping offset={} in={}", data.offset(), topicPartition, e);
