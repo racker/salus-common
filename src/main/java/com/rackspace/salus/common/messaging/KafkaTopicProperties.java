@@ -56,4 +56,7 @@ public class KafkaTopicProperties {
 
   @NotEmpty
   String testMonitorResults = "telemetry.test-monitor-results.json";
+
+  @NotEmpty
+  String testEventTaskResults = "telemetry.test-event-task-results.json";
 }
