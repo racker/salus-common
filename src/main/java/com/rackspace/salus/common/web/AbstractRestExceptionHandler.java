@@ -165,7 +165,7 @@ public abstract class AbstractRestExceptionHandler {
       final JsonMappingException jsonMappingException = (JsonMappingException) e.getCause();
 
       return respondWith(request, HttpStatus.BAD_REQUEST,
-          String.format("Failed to parse JSON at %s", jsonMappingException.getPathReference()));
+          String.format("Failed to parse JSON: %s", jsonMappingException.getMessage()));
     }
     else {
       // fallback to default message derivation
