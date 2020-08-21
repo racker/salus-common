@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Rackspace US, Inc.
+ * Copyright 2020 Rackspace US, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,7 +37,7 @@ public class RemoteServiceCallException extends RuntimeException {
    * @param cause the {@link RestClientException} thrown by a {@link RestTemplate} call
    */
   public RemoteServiceCallException(String remoteServiceName, RestClientException cause) {
-    super(String.format("Remote call to service %s failed", remoteServiceName), cause);
+    super(String.format("Remote call to service %s failed: %s", remoteServiceName, cause.getMessage()), cause);
     this.remoteServiceName = remoteServiceName;
   }
 
