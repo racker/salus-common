@@ -59,4 +59,10 @@ public class KafkaTopicProperties {
 
   @NotEmpty
   String testEventTaskResults = "telemetry.test-event-task-results.json";
+
+  @NotEmpty
+  String kapacitorEvents = "salus.kapacitor-events.json";
+
+  @NotEmpty
+  String stateChangeEvents = "salus.state-change-events.json";
 }
