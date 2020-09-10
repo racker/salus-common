@@ -16,7 +16,7 @@
 
 package com.rackspace.salus.common.config;
 
-public interface MetricsName {
-  String SERVICE_OPERATION_SUCCEEDED_METRIC_NAME = "service_operations_succeeded";
-  String SERVICE_OPERATION_FAILED_METRIC_NAME = "service_operations_succeeded";
+public interface MetricNames {
+  String SERVICE_OPERATION_SUCCEEDED = "service_operations_succeeded";
+  String SERVICE_OPERATION_FAILED = "service_operations_failed";
 }
