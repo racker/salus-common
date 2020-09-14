@@ -16,7 +16,7 @@
 
 package com.rackspace.salus.common.config;
 
-public interface MetricTagsValues {
+public interface MetricTagValues {
   String CREATE_OPERATION = "create";
   String REMOVE_OPERATION = "remove";
   String UPDATE_OPERATION = "update";
