@@ -27,6 +27,7 @@ import org.springframework.boot.web.servlet.error.ErrorAttributes;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestClientException;
@@ -105,6 +106,7 @@ public abstract class AbstractRestExceptionHandler {
     if (message != null) {
       body.put("message", message);
     }
+    body.remove("errors");
     return new ResponseEntity<>(body, status);
   }
 
@@ -171,6 +173,12 @@ public abstract class AbstractRestExceptionHandler {
       // fallback to default message derivation
       return respondWith(request, HttpStatus.BAD_REQUEST);
     }
+  }
+
+  @ExceptionHandler(MethodArgumentNotValidException.class)
+  public ResponseEntity<?> handleMethodArgumentNotValidException(HttpServletRequest request, MethodArgumentNotValidException e) {
+    logRequestFailure(request, e);
+    return respondWith(request, HttpStatus.BAD_REQUEST, e.getMessage());
   }
 
   @ExceptionHandler({RuntimeKafkaException.class})
