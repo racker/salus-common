@@ -103,7 +103,6 @@ public abstract class AbstractRestExceptionHandler {
     }
     body.put("status", status.value());
     body.put("error", status.getReasonPhrase());
-    body.remove("errors");
     if (message != null) {
       body.put("message", message);
     }
@@ -184,7 +183,13 @@ public abstract class AbstractRestExceptionHandler {
   @ExceptionHandler(MethodArgumentNotValidException.class)
   public ResponseEntity<?> handleMethodArgumentNotValidException(HttpServletRequest request, MethodArgumentNotValidException e) {
     logRequestFailure(request, e);
-    return respondWith(request, HttpStatus.BAD_REQUEST, e.getMessage());
+    StringBuilder message = new StringBuilder();
+    e.getBindingResult().getFieldErrors().stream().forEach(error -> {
+      message.append("Validation failed for [field]: ").append(error.getField())
+          .append(" with [message]: ").append(error.getDefaultMessage()).append(", ");
+    });
+    message.delete(message.length() - 2, message.length());
+    return respondWith(request, HttpStatus.BAD_REQUEST, message.toString());
   }
 
 }
