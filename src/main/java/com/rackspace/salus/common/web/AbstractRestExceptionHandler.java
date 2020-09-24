@@ -20,6 +20,7 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.rackspace.salus.common.errors.ResponseMessages;
 import com.rackspace.salus.common.errors.RuntimeKafkaException;
 import java.util.Map;
+import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import javax.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
@@ -183,13 +184,11 @@ public abstract class AbstractRestExceptionHandler {
   @ExceptionHandler(MethodArgumentNotValidException.class)
   public ResponseEntity<?> handleMethodArgumentNotValidException(HttpServletRequest request, MethodArgumentNotValidException e) {
     logRequestFailure(request, e);
-    StringBuilder message = new StringBuilder();
-    e.getBindingResult().getFieldErrors().stream().forEach(error -> {
-      message.append("Validation failed for [field]: ").append(error.getField())
-          .append(" with [message]: ").append(error.getDefaultMessage()).append(", ");
-    });
-    message.delete(message.length() - 2, message.length());
-    return respondWith(request, HttpStatus.BAD_REQUEST, message.toString());
+    String message = "One or more field validations failed: " +
+        e.getBindingResult().getFieldErrors().stream()
+            .map(error -> error.getField() + " " + error.getDefaultMessage())
+            .collect(Collectors.joining(", "));
+    return respondWith(request, HttpStatus.BAD_REQUEST, message);
   }
 
 }
