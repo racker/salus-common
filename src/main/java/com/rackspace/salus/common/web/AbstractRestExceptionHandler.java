@@ -20,6 +20,7 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.rackspace.salus.common.errors.ResponseMessages;
 import com.rackspace.salus.common.errors.RuntimeKafkaException;
 import java.util.Map;
+import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import javax.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
@@ -27,6 +28,7 @@ import org.springframework.boot.web.servlet.error.ErrorAttributes;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestClientException;
@@ -177,6 +179,16 @@ public abstract class AbstractRestExceptionHandler {
   public ResponseEntity<?> handleKafkaExceptions(HttpServletRequest request, Exception e) {
     logRequestFailure(request, e);
     return respondWith(request, HttpStatus.SERVICE_UNAVAILABLE, ResponseMessages.kafkaExceptionMessage);
+  }
+
+  @ExceptionHandler(MethodArgumentNotValidException.class)
+  public ResponseEntity<?> handleMethodArgumentNotValidException(HttpServletRequest request, MethodArgumentNotValidException e) {
+    logRequestFailure(request, e);
+    String message = "One or more field validations failed: " +
+        e.getBindingResult().getFieldErrors().stream()
+            .map(error -> error.getField())
+            .collect(Collectors.joining(", "));
+    return respondWith(request, HttpStatus.BAD_REQUEST, message);
   }
 
 }
