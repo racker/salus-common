@@ -186,7 +186,7 @@ public abstract class AbstractRestExceptionHandler {
     logRequestFailure(request, e);
     String message = "One or more field validations failed: " +
         e.getBindingResult().getFieldErrors().stream()
-            .map(error -> error.getField() + " " + error.getDefaultMessage())
+            .map(error -> error.getField())
             .collect(Collectors.joining(", "));
     return respondWith(request, HttpStatus.BAD_REQUEST, message);
   }
