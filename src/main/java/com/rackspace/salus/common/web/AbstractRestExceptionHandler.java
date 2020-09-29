@@ -16,6 +16,7 @@
 
 package com.rackspace.salus.common.web;
 
+import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.rackspace.salus.common.errors.ResponseMessages;
 import com.rackspace.salus.common.errors.RuntimeKafkaException;
@@ -143,8 +144,8 @@ public abstract class AbstractRestExceptionHandler {
   public ResponseEntity<?> handleBadState(HttpServletRequest request, Exception e) {
 
     logRequestFailure(request, e);
-    if (e.getCause() instanceof HttpMessageNotReadableException) {
-      return respondWith(request, HttpStatus.BAD_REQUEST, e.getCause().getMessage());
+    if (e.getCause().getCause() instanceof JsonParseException) {
+      return respondWith(request, HttpStatus.BAD_REQUEST, e.getCause().getCause().getMessage());
     }
     return respondWith(request, HttpStatus.INTERNAL_SERVER_ERROR);
   }
