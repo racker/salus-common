@@ -144,8 +144,10 @@ public abstract class AbstractRestExceptionHandler {
   public ResponseEntity<?> handleBadState(HttpServletRequest request, Exception e) {
 
     logRequestFailure(request, e);
-    if (e.getCause().getCause() instanceof JsonParseException) {
-      return respondWith(request, HttpStatus.BAD_REQUEST, e.getCause().getCause().getMessage());
+    if (e.getCause() instanceof HttpMessageNotReadableException) {
+      if (e.getCause().getCause() instanceof JsonParseException) {
+        return respondWith(request, HttpStatus.BAD_REQUEST, e.getCause().getCause().getMessage());
+      }
     }
     return respondWith(request, HttpStatus.INTERNAL_SERVER_ERROR);
   }
