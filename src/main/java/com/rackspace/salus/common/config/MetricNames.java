@@ -19,4 +19,5 @@ package com.rackspace.salus.common.config;
 public interface MetricNames {
   String SERVICE_OPERATION_SUCCEEDED = "service_operations_succeeded";
   String SERVICE_OPERATION_FAILED = "service_operations_failed";
+  String SILENT_ERRORS = "silent_errors";
 }

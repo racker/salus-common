@@ -22,4 +22,5 @@ public interface MetricTags {
   String OBJECT_TYPE_METRIC_TAG = "objectType";
   String EXCEPTION_METRIC_TAG = "exception";
   String URI_METRIC_TAG = "uri";
+  String REASON = "reason";
 }
