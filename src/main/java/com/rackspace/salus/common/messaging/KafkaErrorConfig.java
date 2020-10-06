@@ -60,7 +60,8 @@ public class KafkaErrorConfig {
   public ConsumerAwareErrorHandler listenerContainerErrorHandler() {
     return (e, data, consumer) -> {
       if (data == null) {
-        log.warn("Error occurred within Kafka consumer={}", consumer, e);
+        log.warn("Error occurred within Kafka consumer={}, no consumer record is available",
+            consumer, e);
         return;
       }
 
