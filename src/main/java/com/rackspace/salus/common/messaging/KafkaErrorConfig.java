@@ -32,7 +32,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.listener.ConsumerAwareErrorHandler;
 import org.springframework.kafka.support.serializer.DeserializationException;
-import org.springframework.kafka.support.serializer.ErrorHandlingDeserializer2;
+import org.springframework.kafka.support.serializer.ErrorHandlingDeserializer;
 
 @Configuration
 @Slf4j
@@ -51,7 +51,7 @@ public class KafkaErrorConfig {
 
   /**
    * Gets picked up by Spring Boot Kafka autoconfig and registered with the default.
-   * This handler provides additional debug logging when {@link ErrorHandlingDeserializer2} is
+   * This handler provides additional debug logging when {@link ErrorHandlingDeserializer} is
    * configured as the value deserializer since the original cause and payload can be extracted
    * from the header set by that deserializer.
    * {@link ConcurrentKafkaListenerContainerFactoryConfigurer} bean.
@@ -59,6 +59,12 @@ public class KafkaErrorConfig {
   @Bean
   public ConsumerAwareErrorHandler listenerContainerErrorHandler() {
     return (e, data, consumer) -> {
+      if (data == null) {
+        log.warn("Error occurred within Kafka consumer={}, no consumer record is available",
+            consumer, e);
+        return;
+      }
+
       final String topic = data.topic();
       final int partition = data.partition();
       // for deserialization issues, only the exception will contain the attempted payload
@@ -79,7 +85,7 @@ public class KafkaErrorConfig {
       if (log.isDebugEnabled()) {
 
         final Iterable<Header> headerValues = data.headers()
-            .headers(ErrorHandlingDeserializer2.VALUE_DESERIALIZER_EXCEPTION_HEADER);
+            .headers(ErrorHandlingDeserializer.VALUE_DESERIALIZER_EXCEPTION_HEADER);
         // headerValues will be empty if the exception header isn't present, so extra logging is skipped
         for (Header headerValue : headerValues) {
           try {
