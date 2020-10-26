@@ -28,6 +28,10 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @Data
 public class KafkaTopicProperties {
 
+  /**
+   * This value should match the number of partitions configured for the topic
+   * containing enriched metrics.
+   */
   @NotNull
   Integer metricsTopicPartitions = 64;
 
