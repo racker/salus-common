@@ -17,6 +17,7 @@
 package com.rackspace.salus.common.messaging;
 
 import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.NotNull;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
@@ -26,6 +27,9 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties("salus.kafka.topics")
 @Data
 public class KafkaTopicProperties {
+
+  @NotNull
+  Integer metricsTopicPartitions = 64;
 
   @NotEmpty
   String logs = "telemetry.logs.json";
