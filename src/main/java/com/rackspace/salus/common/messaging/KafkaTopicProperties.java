@@ -17,6 +17,7 @@
 package com.rackspace.salus.common.messaging;
 
 import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.NotNull;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
@@ -26,6 +27,13 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties("salus.kafka.topics")
 @Data
 public class KafkaTopicProperties {
+
+  /**
+   * This value should match the number of partitions configured for the topic
+   * containing enriched metrics.
+   */
+  @NotNull
+  Integer metricsTopicPartitions = 64;
 
   @NotEmpty
   String logs = "telemetry.logs.json";
