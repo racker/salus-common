@@ -41,8 +41,8 @@ public class IdentityServiceUtils {
   RestTemplate restTemplate = new RestTemplate();
 
   private @Value("${identity-endpoint}") String identityEndpoint = "https://identity-internal.api.rackspacecloud.com/v2.0/tokens";
-  private @Value("${identity-admin-username}") String adminUsername = "cloudMAAS";
-  private @Value("${identity-admin-password}") String adminPassword = "dr7jP26iv4BNR9bA";
+  private @Value("${identity-admin-username}") String adminUsername ;
+  private @Value("${identity-admin-password}") String adminPassword ;
 
   @Cacheable(value = "tokens", condition = "#useCache")
   public String getAdminToken(boolean useCache) {
