@@ -16,7 +16,10 @@
 
 package com.rackspace.salus.common.web;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.rackspace.salus.common.config.IdentityProperties;
 import com.rackspace.salus.common.config.RoleProperties;
+import com.rackspace.salus.common.services.IdentityAuthenticationService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -28,6 +31,7 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 import org.springframework.security.web.firewall.DefaultHttpFirewall;
 import org.springframework.security.web.firewall.HttpFirewall;
+import org.springframework.web.client.RestTemplate;
 
 /**
  * This class is used to populate roles into the spring security context.
@@ -41,8 +45,20 @@ import org.springframework.security.web.firewall.HttpFirewall;
 @Slf4j
 public class BackendServicesWebSecurityConfig extends WebSecurityConfigurerAdapter {
 
+  private RestTemplate restTemplate;
+  private ObjectMapper objectMapper;
+  private IdentityAuthenticationService identityAuthenticationService;
+  private IdentityProperties identityProperties;
+
+
   @Autowired
-  public BackendServicesWebSecurityConfig() {
+  public BackendServicesWebSecurityConfig(IdentityAuthenticationService identityAuthenticationService,
+      RestTemplate restTemplate, ObjectMapper objectMapper,
+      IdentityProperties identityProperties) {
+    this.identityAuthenticationService = identityAuthenticationService;
+    this.restTemplate = restTemplate;
+    this.objectMapper = objectMapper;
+    this.identityProperties = identityProperties;
   }
 
   /**
@@ -61,8 +77,7 @@ public class BackendServicesWebSecurityConfig extends WebSecurityConfigurerAdapt
     http
         .csrf().disable()
         .addFilterBefore(
-//            new ReposeHeaderFilter(false),
-            new IdentityAuthFilter(),
+            new IdentityAuthFilter(identityAuthenticationService, restTemplate, objectMapper, identityProperties),
             BasicAuthenticationFilter.class)
         .authorizeRequests()
         .antMatchers("/api/**")

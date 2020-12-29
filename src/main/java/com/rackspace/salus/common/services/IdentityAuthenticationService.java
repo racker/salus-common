@@ -14,15 +14,16 @@
  * limitations under the License.
  */
 
-package com.rackspace.salus.common.util;
+package com.rackspace.salus.common.services;
 
+import static com.rackspace.salus.common.config.IdentityCacheConfig.CACHE_IDENTITY_ADMIN_TOKEN;
+import com.rackspace.salus.common.config.IdentityProperties;
 import com.rackspace.salus.common.model.AdminTokenRequest;
 import com.rackspace.salus.common.model.AdminTokenRequest.Auth;
 import com.rackspace.salus.common.model.AdminTokenRequest.PasswordCredentials;
 import com.rackspace.salus.common.model.AdminTokenResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -35,33 +36,37 @@ import org.springframework.web.client.RestTemplate;
 
 @Service
 @Slf4j
-public class IdentityServiceUtils {
+public class IdentityAuthenticationService {
 
-  private @Autowired
-  RestTemplate restTemplate = new RestTemplate();
+  private RestTemplate restTemplate;
+  private final IdentityProperties identityProperties;
 
-  private @Value("${identity-endpoint}") String identityEndpoint = "https://identity-internal.api.rackspacecloud.com/v2.0/tokens";
-  private @Value("${identity-admin-username}") String adminUsername ;
-  private @Value("${identity-admin-password}") String adminPassword ;
+  @Autowired
+  public IdentityAuthenticationService(RestTemplate restTemplate, IdentityProperties identityProperties) {
+    this.restTemplate = restTemplate;
+    this.identityProperties = identityProperties;
+  }
 
-  @Cacheable(value = "tokens", condition = "#useCache")
+  @Cacheable(value = CACHE_IDENTITY_ADMIN_TOKEN, condition = "#useCache")
   public String getAdminToken(boolean useCache) {
     log.info("getting admin token");
     HttpHeaders headers = new HttpHeaders();
     headers.add("Content-Type", MediaType.APPLICATION_JSON_VALUE);
 
     AdminTokenRequest adminTokenRequest = new AdminTokenRequest(
-        new Auth(new PasswordCredentials(adminUsername, adminPassword)));
+        new Auth(new PasswordCredentials(
+            identityProperties.getAdminUsername(), identityProperties.getAdminPassword(), null)));
 
     HttpEntity httpEntity = new HttpEntity(adminTokenRequest, headers);
 
-    log.info("hitting "+identityEndpoint);
-    ResponseEntity<AdminTokenResponse> responseEntity = restTemplate.exchange(identityEndpoint, HttpMethod.POST, httpEntity, AdminTokenResponse.class);
-    if(responseEntity.getStatusCode().is4xxClientError()) {
-      throw new RestClientException("Error occurred");
-    } else  {
+    log.info("hitting {} with body {}",identityProperties.getIdentityEndpoint(), adminTokenRequest);
+    ResponseEntity<AdminTokenResponse> responseEntity = restTemplate
+        .exchange(identityProperties.getIdentityEndpoint(), HttpMethod.POST, httpEntity, AdminTokenResponse.class);
+    if(responseEntity.getStatusCode().is2xxSuccessful()) {
       log.info("Success from admin token api");
       return responseEntity.getBody().getAccess().getToken().getId();
+    } else  {
+      throw new RestClientException("Error occurred");
     }
   }
 }

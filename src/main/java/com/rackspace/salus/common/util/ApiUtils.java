@@ -17,9 +17,11 @@
 package com.rackspace.salus.common.util;
 
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.gateway.mvc.ProxyExchange;
 import org.springframework.http.HttpHeaders;
 
+@Slf4j
 public class ApiUtils {
 
   static final List<String> requiredHeaders = List.of(
@@ -35,6 +37,7 @@ public class ApiUtils {
     for (String header : requiredHeaders) {
       List<String> value = headers.get(header);
       if (value != null) {
+        log.info("header "+header+" value "+value);
         newHeaders.put(header, value);
       }
     }

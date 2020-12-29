@@ -20,13 +20,14 @@ import static java.util.stream.Collectors.toList;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.rackspace.salus.common.config.IdentityProperties;
 import com.rackspace.salus.common.model.TokenValidationResponse;
 import com.rackspace.salus.common.model.TokenValidationResponse.Role;
-import com.rackspace.salus.common.util.IdentityServiceUtils;
+import com.rackspace.salus.common.services.IdentityAuthenticationService;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.time.Instant;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
@@ -39,8 +40,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.cache.CacheManager;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -63,21 +62,23 @@ public class IdentityAuthFilter extends GenericFilterBean {
   // but do have a list of tenants to log for audit purposes.
   private final static String EXTRA_TENANT_HEADER = "X-Tenant-Id";
 
-  private @Value("${identity-endpoint}")
-  String identityEndpoint = "https://identity-internal.api.rackspacecloud.com/v2.0/tokens";
-
-  private @Autowired
-  IdentityServiceUtils identityServiceUtils = new IdentityServiceUtils();
-
-  private RestTemplate restTemplate = new RestTemplate();
-
-  private ObjectMapper objectMapper = new ObjectMapper();
-
-  private @Autowired
-  CacheManager cacheManager;
-
   private final DateTimeFormatter formatter = DateTimeFormatter
       .ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSX");
+
+  private RestTemplate restTemplate;
+  private ObjectMapper objectMapper;
+  private IdentityAuthenticationService identityAuthenticationService;
+  private IdentityProperties identityProperties;
+
+  @Autowired
+  public IdentityAuthFilter(IdentityAuthenticationService identityAuthenticationService,
+      RestTemplate restTemplate, ObjectMapper objectMapper,
+      IdentityProperties identityProperties) {
+    this.identityAuthenticationService = identityAuthenticationService;
+    this.restTemplate = restTemplate;
+    this.objectMapper = objectMapper;
+    this.identityProperties = identityProperties;
+  }
 
   @Override
   public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse,
@@ -87,16 +88,15 @@ public class IdentityAuthFilter extends GenericFilterBean {
       final HttpServletResponse response = (HttpServletResponse) servletResponse;
 
       String xAuthToken = request.getHeader("x-auth-token");
-      String endpointUrl = identityEndpoint + "/" + xAuthToken;
+      String endpointUrl = identityProperties.getIdentityEndpoint() + "/" + xAuthToken;
 
-      String adminToken = identityServiceUtils.getAdminToken(true);
+      String adminToken = identityAuthenticationService.getAdminToken(true);
       try {
         TokenValidationResponse tokenValidationResponse = callTokenValidationApi(endpointUrl,
             adminToken);
         if (checkTokenExpired(tokenValidationResponse)) {
-          addCustomHeaders(servletRequest, tokenValidationResponse);
-
-          CustomHttpServletRequest mutableRequest = addCustomHeaders(servletRequest, tokenValidationResponse);
+          Map<String, String> attributes = getIdentityResponseAsMap(tokenValidationResponse);
+          servletRequest.setAttribute("identityHeadersMap", attributes);
 
           final List<SimpleGrantedAuthority> roles = tokenValidationResponse.getAccess().getUser().getRoles().stream()
               .map(role ->
@@ -113,14 +113,14 @@ public class IdentityAuthFilter extends GenericFilterBean {
 
           SecurityContextHolder.getContext().setAuthentication(auth);
 
-          filterChain.doFilter(mutableRequest, response);
+          filterChain.doFilter(servletRequest, response);
         } else {
-          prepareResponse(response, "Token Expired", "Bad Token", HttpStatus.NOT_FOUND
+          prepareResponse(response, "Token Expired", "Bad Token", HttpStatus.UNAUTHORIZED
               .value());
         }
       } catch (RestClientException e) {
         log.error("Spring Security Filter Chain Exception:", e);
-        prepareResponse(response, e.getLocalizedMessage(), "Bad Token", HttpStatus.NOT_FOUND
+        prepareResponse(response, e.getLocalizedMessage(), "Bad Token", HttpStatus.INTERNAL_SERVER_ERROR
             .value());
       }
     }
@@ -135,7 +135,7 @@ public class IdentityAuthFilter extends GenericFilterBean {
 
     if (responseEntity.getStatusCodeValue() == 401) {
       log.info("401 error from callTokenValidationApi");
-      return callTokenValidationApi(endpointUrl, identityServiceUtils.getAdminToken(false));
+      return callTokenValidationApi(endpointUrl, identityAuthenticationService.getAdminToken(false));
     } else if (responseEntity.getStatusCodeValue() == 200) {
       log.info("200 success from callTokenValidationApi " + responseEntity.getBody());
       TokenValidationResponse tokenValidationResponse = null;
@@ -169,9 +169,7 @@ public class IdentityAuthFilter extends GenericFilterBean {
   }
 
   private boolean checkTokenExpired(TokenValidationResponse tokenValidationResponse) {
-    if (LocalDateTime.now(ZoneId.of("UTC"))
-        .isAfter(LocalDateTime
-            .parse(tokenValidationResponse.getAccess().getToken().getExpires(), formatter))) {
+    if(Instant.now().isAfter(Instant.parse(tokenValidationResponse.getAccess().getToken().getExpires()))) {
       log.info("invalidated token");
       return false;
     } else {
@@ -180,10 +178,8 @@ public class IdentityAuthFilter extends GenericFilterBean {
     }
   }
 
-  private CustomHttpServletRequest addCustomHeaders(ServletRequest request, TokenValidationResponse tokenValidationResponse) {
-    HttpServletRequest req = (HttpServletRequest) request;
-    CustomHttpServletRequest mutableRequest = new CustomHttpServletRequest(req);
-
+  private Map<String, String> getIdentityResponseAsMap(TokenValidationResponse tokenValidationResponse) {
+    Map<String, String> attributes = new HashMap<>();
     StringBuilder xRolesValues = new StringBuilder("");
     for(Role role : tokenValidationResponse.getAccess().getUser().getRoles()) {
       xRolesValues.append(role.getName()).append(",");
@@ -191,10 +187,6 @@ public class IdentityAuthFilter extends GenericFilterBean {
 
     String xRolesValuesString = xRolesValues.toString();
     xRolesValuesString = xRolesValuesString.substring(0, xRolesValuesString.lastIndexOf(",")-1);
-
-    mutableRequest.putHeader(HEADER_X_ROLES, xRolesValuesString);
-
-
 
     StringBuilder extraTenantValues = new StringBuilder("");
     for(Role role : tokenValidationResponse.getAccess().getUser().getRoles()) {
@@ -204,13 +196,9 @@ public class IdentityAuthFilter extends GenericFilterBean {
     String extraTenantValuesString = extraTenantValues.toString();
     extraTenantValuesString = extraTenantValuesString.substring(0, extraTenantValuesString.lastIndexOf(",")-1);
 
-    mutableRequest.putHeader(EXTRA_TENANT_HEADER, extraTenantValuesString);
-
-    mutableRequest.putHeader(HEADER_TENANT, tokenValidationResponse.getAccess().getToken().getTenant().getId());
-
-//    tokenValidationResponse.getAccess().getUser().getRoles().stream().map(e -> xRolesValues.append(e.getName()).append(","));
-
-
-    return mutableRequest;
+    attributes.put(HEADER_X_ROLES,xRolesValuesString);
+    attributes.put(EXTRA_TENANT_HEADER,extraTenantValuesString);
+    attributes.put(HEADER_TENANT,tokenValidationResponse.getAccess().getToken().getTenant().getId());
+    return attributes;
   }
 }
