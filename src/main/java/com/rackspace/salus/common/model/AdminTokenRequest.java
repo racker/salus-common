@@ -17,7 +17,6 @@
 package com.rackspace.salus.common.model;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -25,7 +24,7 @@ import lombok.NonNull;
 
 @Data
 @AllArgsConstructor
-@JsonInclude(Include.NON_NULL)
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class AdminTokenRequest {
 
   @JsonProperty("auth")
@@ -41,6 +40,7 @@ public class AdminTokenRequest {
 
   @Data
   @AllArgsConstructor
+  @JsonInclude(JsonInclude.Include.NON_NULL)
   public static class PasswordCredentials {
 
     @NonNull

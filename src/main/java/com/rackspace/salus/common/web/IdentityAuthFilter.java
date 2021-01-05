@@ -39,7 +39,6 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -70,7 +69,6 @@ public class IdentityAuthFilter extends GenericFilterBean {
   private IdentityAuthenticationService identityAuthenticationService;
   private IdentityProperties identityProperties;
 
-  @Autowired
   public IdentityAuthFilter(IdentityAuthenticationService identityAuthenticationService,
       RestTemplate restTemplate, ObjectMapper objectMapper,
       IdentityProperties identityProperties) {
@@ -88,7 +86,7 @@ public class IdentityAuthFilter extends GenericFilterBean {
       final HttpServletResponse response = (HttpServletResponse) servletResponse;
 
       String xAuthToken = request.getHeader("x-auth-token");
-      String endpointUrl = identityProperties.getIdentityEndpoint() + "/" + xAuthToken;
+      String endpointUrl = identityProperties.getEndpoint() + "/" + xAuthToken;
 
       String adminToken = identityAuthenticationService.getAdminToken(true);
       try {
@@ -163,7 +161,7 @@ public class IdentityAuthFilter extends GenericFilterBean {
     response.put("status", statusCode);
 
     httpServletResponse.setContentType("application/json");
-    httpServletResponse.setStatus(HttpServletResponse.SC_NOT_FOUND);
+    httpServletResponse.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
     PrintWriter out = httpServletResponse.getWriter();
     out.println(objectMapper.writeValueAsString(response));
   }

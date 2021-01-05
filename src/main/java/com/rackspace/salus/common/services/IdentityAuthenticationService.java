@@ -16,7 +16,6 @@
 
 package com.rackspace.salus.common.services;
 
-import static com.rackspace.salus.common.config.IdentityCacheConfig.CACHE_IDENTITY_ADMIN_TOKEN;
 import com.rackspace.salus.common.config.IdentityProperties;
 import com.rackspace.salus.common.model.AdminTokenRequest;
 import com.rackspace.salus.common.model.AdminTokenRequest.Auth;
@@ -47,7 +46,7 @@ public class IdentityAuthenticationService {
     this.identityProperties = identityProperties;
   }
 
-  @Cacheable(value = CACHE_IDENTITY_ADMIN_TOKEN, condition = "#useCache")
+  @Cacheable(value = "identity_admin_tokens", condition = "#useCache")
   public String getAdminToken(boolean useCache) {
     log.info("getting admin token");
     HttpHeaders headers = new HttpHeaders();
@@ -59,9 +58,9 @@ public class IdentityAuthenticationService {
 
     HttpEntity httpEntity = new HttpEntity(adminTokenRequest, headers);
 
-    log.info("hitting {} with body {}",identityProperties.getIdentityEndpoint(), adminTokenRequest);
+    log.info("hitting {} with body {}",identityProperties.getEndpoint(), adminTokenRequest);
     ResponseEntity<AdminTokenResponse> responseEntity = restTemplate
-        .exchange(identityProperties.getIdentityEndpoint(), HttpMethod.POST, httpEntity, AdminTokenResponse.class);
+        .exchange(identityProperties.getEndpoint(), HttpMethod.POST, httpEntity, AdminTokenResponse.class);
     if(responseEntity.getStatusCode().is2xxSuccessful()) {
       log.info("Success from admin token api");
       return responseEntity.getBody().getAccess().getToken().getId();

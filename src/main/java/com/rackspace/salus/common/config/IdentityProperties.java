@@ -19,17 +19,15 @@ package com.rackspace.salus.common.config;
 import javax.validation.constraints.NotBlank;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
 
 @ConfigurationProperties("salus.identity")
-@Component
 @Data
 @Validated
 public class IdentityProperties {
 
   @NotBlank
-  String identityEndpoint;
+  String endpoint;
   @NotBlank
   String adminUsername;
   @NotBlank

@@ -1,5 +1,0 @@
-spring:
-  cache:
-    cache-names: "tokens"
-    caffeine:
-      spec: "maximumSize=500,expireAfterAccess=24h"

@@ -25,6 +25,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
@@ -41,24 +42,21 @@ import org.springframework.web.client.RestTemplate;
  */
 @Configuration
 @EnableWebSecurity
-@EnableConfigurationProperties(RoleProperties.class)
+@EnableConfigurationProperties({RoleProperties.class, IdentityProperties.class})
 @Slf4j
+@Import({RestTemplate.class})
 public class BackendServicesWebSecurityConfig extends WebSecurityConfigurerAdapter {
 
-  private RestTemplate restTemplate;
-  private ObjectMapper objectMapper;
-  private IdentityAuthenticationService identityAuthenticationService;
-  private IdentityProperties identityProperties;
-
+  IdentityProperties identityProperties;
+  RestTemplate restTemplate;
+  ObjectMapper objectMapper;
 
   @Autowired
-  public BackendServicesWebSecurityConfig(IdentityAuthenticationService identityAuthenticationService,
-      RestTemplate restTemplate, ObjectMapper objectMapper,
-      IdentityProperties identityProperties) {
-    this.identityAuthenticationService = identityAuthenticationService;
+  public BackendServicesWebSecurityConfig(IdentityProperties identityProperties,
+      RestTemplate restTemplate, ObjectMapper objectMapper)  {
+    this.identityProperties = identityProperties;
     this.restTemplate = restTemplate;
     this.objectMapper = objectMapper;
-    this.identityProperties = identityProperties;
   }
 
   /**
@@ -77,7 +75,9 @@ public class BackendServicesWebSecurityConfig extends WebSecurityConfigurerAdapt
     http
         .csrf().disable()
         .addFilterBefore(
-            new IdentityAuthFilter(identityAuthenticationService, restTemplate, objectMapper, identityProperties),
+            new IdentityAuthFilter(
+                new IdentityAuthenticationService(restTemplate, identityProperties),
+                restTemplate, objectMapper, identityProperties),
             BasicAuthenticationFilter.class)
         .authorizeRequests()
         .antMatchers("/api/**")
