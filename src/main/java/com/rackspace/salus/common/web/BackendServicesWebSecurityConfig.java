@@ -16,23 +16,17 @@
 
 package com.rackspace.salus.common.web;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.rackspace.salus.common.config.IdentityProperties;
 import com.rackspace.salus.common.config.RoleProperties;
-import com.rackspace.salus.common.services.IdentityAuthenticationService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 import org.springframework.security.web.firewall.DefaultHttpFirewall;
 import org.springframework.security.web.firewall.HttpFirewall;
-import org.springframework.web.client.RestTemplate;
 
 /**
  * This class is used to populate roles into the spring security context.
@@ -42,22 +36,9 @@ import org.springframework.web.client.RestTemplate;
  */
 @Configuration
 @EnableWebSecurity
-@EnableConfigurationProperties({RoleProperties.class, IdentityProperties.class})
+@EnableConfigurationProperties({RoleProperties.class})
 @Slf4j
-@Import({RestTemplate.class})
 public class BackendServicesWebSecurityConfig extends WebSecurityConfigurerAdapter {
-
-  IdentityProperties identityProperties;
-  RestTemplate restTemplate;
-  ObjectMapper objectMapper;
-
-  @Autowired
-  public BackendServicesWebSecurityConfig(IdentityProperties identityProperties,
-      RestTemplate restTemplate, ObjectMapper objectMapper)  {
-    this.identityProperties = identityProperties;
-    this.restTemplate = restTemplate;
-    this.objectMapper = objectMapper;
-  }
 
   /**
    * This is required to populate the spring security context with the roles
@@ -75,9 +56,7 @@ public class BackendServicesWebSecurityConfig extends WebSecurityConfigurerAdapt
     http
         .csrf().disable()
         .addFilterBefore(
-            new IdentityAuthFilter(
-                new IdentityAuthenticationService(restTemplate, identityProperties),
-                restTemplate, objectMapper, identityProperties),
+            new ReposeHeaderFilter(false),
             BasicAuthenticationFilter.class)
         .authorizeRequests()
         .antMatchers("/api/**")
