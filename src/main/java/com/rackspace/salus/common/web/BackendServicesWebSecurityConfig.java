@@ -56,7 +56,7 @@ public class BackendServicesWebSecurityConfig extends WebSecurityConfigurerAdapt
     http
         .csrf().disable()
         .addFilterBefore(
-            new ReposeHeaderFilter(false),
+            new IdentityHeaderFilter(false),
             BasicAuthenticationFilter.class)
         .authorizeRequests()
         .antMatchers("/api/**")

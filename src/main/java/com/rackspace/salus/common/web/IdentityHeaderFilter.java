@@ -25,13 +25,13 @@ import lombok.extern.slf4j.Slf4j;
  * that into an authenticated {@link PreAuthenticatedToken}.
  */
 @Slf4j
-public class ReposeHeaderFilter extends PreAuthenticatedFilter {
+public class IdentityHeaderFilter extends PreAuthenticatedFilter {
 
     public static final String HEADER_X_ROLES = "X-Roles";
     public static final String HEADER_X_IMPERSONATOR_ROLES = "X-Impersonator-Roles";
     public static final String HEADER_TENANT = "Requested-Tenant-Id";
 
-    public ReposeHeaderFilter(boolean requireTenantId) {
+    public IdentityHeaderFilter(boolean requireTenantId) {
         super(HEADER_TENANT, Arrays.asList(HEADER_X_ROLES, HEADER_X_IMPERSONATOR_ROLES), requireTenantId);
     }
 }

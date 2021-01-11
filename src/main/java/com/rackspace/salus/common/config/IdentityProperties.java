@@ -26,6 +26,9 @@ import org.springframework.validation.annotation.Validated;
 @Validated
 public class IdentityProperties {
 
+  /**
+   * Base Endpoint Path of Identity API without any trailing slash
+   */
   @NotBlank
   String endpoint;
   @NotBlank

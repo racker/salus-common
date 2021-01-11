@@ -30,18 +30,17 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 @Service
 @Slf4j
-public class IdentityAuthenticationService {
+public class IdentityAdminAuthService {
 
   private RestTemplate restTemplate;
   private final IdentityProperties identityProperties;
 
   @Autowired
-  public IdentityAuthenticationService(RestTemplate restTemplate, IdentityProperties identityProperties) {
+  public IdentityAdminAuthService(RestTemplate restTemplate, IdentityProperties identityProperties) {
     this.restTemplate = restTemplate;
     this.identityProperties = identityProperties;
   }
@@ -58,14 +57,9 @@ public class IdentityAuthenticationService {
 
     HttpEntity httpEntity = new HttpEntity(adminTokenRequest, headers);
 
-    log.info("hitting {} with body {}",identityProperties.getEndpoint(), adminTokenRequest);
+    log.debug("hitting {} ",identityProperties.getEndpoint());
     ResponseEntity<AdminTokenResponse> responseEntity = restTemplate
         .exchange(identityProperties.getEndpoint(), HttpMethod.POST, httpEntity, AdminTokenResponse.class);
-    if(responseEntity.getStatusCode().is2xxSuccessful()) {
-      log.info("Success from admin token api");
-      return responseEntity.getBody().getAccess().getToken().getId();
-    } else  {
-      throw new RestClientException("Error occurred");
-    }
+    return responseEntity.getBody().getAccess().getToken().getId();
   }
 }
