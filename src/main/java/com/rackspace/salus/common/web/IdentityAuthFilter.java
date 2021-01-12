@@ -22,10 +22,7 @@ import com.rackspace.salus.common.model.TokenValidationResponse;
 import com.rackspace.salus.common.model.TokenValidationResponse.Role;
 import com.rackspace.salus.common.services.IdentityTokenValidationService;
 import java.io.IOException;
-import java.io.PrintWriter;
-import java.net.InetAddress;
 import java.time.Instant;
-import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -41,10 +38,11 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.util.StringUtils;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.filter.GenericFilterBean;
 
@@ -54,14 +52,6 @@ public class IdentityAuthFilter extends GenericFilterBean {
   private final ObjectMapper objectMapper;
   private final IdentityTokenValidationService identityTokenValidationService;
   boolean requireTenantId;
-
-  //  private Tracer tracer;
-  private static final String ATTRIBUTE_TRACE_ID = "traceId";
-  private static final String ATTRIBUTE_APP = "app";
-  private static final String ATTRIBUTE_HOST = "host";
-  private static final String ATTRIBUTE_PATH = "path";
-
-  @Value("${spring.application.name}") String appName;
 
   public IdentityAuthFilter(IdentityTokenValidationService identityTokenValidationService,
       ObjectMapper objectMapper, boolean requireTenantId) {
@@ -92,16 +82,12 @@ public class IdentityAuthFilter extends GenericFilterBean {
             filterChain.doFilter(servletRequest, response);
           }
         } else {
-          throw new RestClientException("Token Expired");
+          throw new HttpClientErrorException(HttpStatus.UNAUTHORIZED);
         }
       } catch (RestClientException e) {
-//        HttpClientErrorException exception = (HttpClientErrorException) e;
-
-//        response.sendError(exception.getRawStatusCode(), e.getLocalizedMessage());
         log.error("Spring Security Filter Chain Exception:", e);
-
-//        prepareResponse(request, response, e);
-        throw e;
+        HttpClientErrorException exception = (HttpClientErrorException) e;
+        response.sendError(exception.getRawStatusCode());
       }
     }
   }
@@ -147,31 +133,6 @@ public class IdentityAuthFilter extends GenericFilterBean {
           + " tenant={}, roles={}", tenant, rolesSet);
       return Optional.empty();
     }
-  }
-
-  private void prepareResponse(HttpServletRequest httpServletRequest,
-      HttpServletResponse httpServletResponse, RestClientException e)
-      throws IOException {
-    Map<String, Object> response = new HashMap<>();
-
-    response.put("timestamp", LocalDateTime.now().toString());
-    response.put("status", 500);
-    response.put("error", e);
-    response.put("message", e.getLocalizedMessage());
-
-    response.put("ATTRIBUTE_PATH", httpServletRequest.getRequestURI());
-    response.put(ATTRIBUTE_APP, appName);
-    response.put(ATTRIBUTE_HOST, InetAddress.getLocalHost().getHostName());
-
-//    final Span currentSpan = tracer.currentSpan();
-//    if (currentSpan != null) {
-//      errorAttributes.put(ATTRIBUTE_TRACE_ID, currentSpan.context().traceIdString());
-//    }
-
-    httpServletResponse.setContentType("application/json");
-    httpServletResponse.setStatus(500);
-    PrintWriter out = httpServletResponse.getWriter();
-    out.println(objectMapper.writeValueAsString(response));
   }
 
   private Map<String, String> getIdentityResponseAsMap(HttpServletRequest request,
