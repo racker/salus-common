@@ -23,7 +23,10 @@ import com.rackspace.salus.common.model.AdminTokenRequest.PasswordCredentials;
 import com.rackspace.salus.common.model.AdminTokenResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheConfig;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -34,6 +37,8 @@ import org.springframework.web.client.RestTemplate;
 
 @Service
 @Slf4j
+@CacheConfig(cacheNames = {"identityToken"})
+@EnableCaching
 public class IdentityAdminAuthService {
 
   private RestTemplate restTemplate;
@@ -45,15 +50,16 @@ public class IdentityAdminAuthService {
     this.identityProperties = identityProperties;
   }
 
-  @Cacheable(cacheNames = "identity_admin_tokens" ,condition = "#useCache")
+  @Cacheable(condition = "#useCache")
+  @CacheEvict(condition = "!#useCache", beforeInvocation = true)
   public String getAdminToken(boolean useCache) {
     log.info("getting admin token");
     HttpHeaders headers = new HttpHeaders();
     headers.add("Content-Type", MediaType.APPLICATION_JSON_VALUE);
 
     AdminTokenRequest adminTokenRequest = new AdminTokenRequest(
-        new Auth(new PasswordCredentials(
-            identityProperties.getAdminUsername(), identityProperties.getAdminPassword(), null)));
+        new Auth().setPasswordCredentials(new PasswordCredentials(
+            identityProperties.getAdminUsername(), identityProperties.getAdminPassword())));
 
     HttpEntity httpEntity = new HttpEntity(adminTokenRequest, headers);
 

@@ -17,6 +17,7 @@
 package com.rackspace.salus.common.web;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.rackspace.salus.common.config.IdentityConfig;
 import com.rackspace.salus.common.model.TokenValidationResponse;
 import com.rackspace.salus.common.model.TokenValidationResponse.Role;
 import com.rackspace.salus.common.services.IdentityTokenValidationService;
@@ -33,7 +34,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
-import javax.security.sasl.AuthenticationException;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
@@ -51,26 +51,17 @@ import org.springframework.web.filter.GenericFilterBean;
 @Slf4j
 public class IdentityAuthFilter extends GenericFilterBean {
 
-  public static final String HEADER_X_ROLES = "X-Roles";
-  public static final String HEADER_X_IMPERSONATOR_ROLES = "X-Impersonator-Roles";
-  public static final String HEADER_TENANT = "Requested-Tenant-Id";
-
-  // some requests don't come through with a `tenantHeader` to validate
-  // but do have a list of tenants to log for audit purposes.
-  private final static String EXTRA_TENANT_HEADER = "X-Tenant-Id";
-
   private final ObjectMapper objectMapper;
   private final IdentityTokenValidationService identityTokenValidationService;
   boolean requireTenantId;
-
-  private @Value("${spring.application.name}")
-  String appName;
 
   //  private Tracer tracer;
   private static final String ATTRIBUTE_TRACE_ID = "traceId";
   private static final String ATTRIBUTE_APP = "app";
   private static final String ATTRIBUTE_HOST = "host";
   private static final String ATTRIBUTE_PATH = "path";
+
+  @Value("${spring.application.name}") String appName;
 
   public IdentityAuthFilter(IdentityTokenValidationService identityTokenValidationService,
       ObjectMapper objectMapper, boolean requireTenantId) {
@@ -86,29 +77,31 @@ public class IdentityAuthFilter extends GenericFilterBean {
       final HttpServletRequest request = (HttpServletRequest) servletRequest;
       final HttpServletResponse response = (HttpServletResponse) servletResponse;
 
-      String xAuthToken = request.getHeader("x-auth-token");
+      String xAuthToken = request.getHeader(IdentityConfig.X_AUTH_HEADER);
       try {
-        TokenValidationResponse tokenValidationResponse = identityTokenValidationService.validateToken(xAuthToken);
-        if (isTokenValid(tokenValidationResponse)) {
+        TokenValidationResponse tokenValidationResponse = identityTokenValidationService
+            .validateToken(xAuthToken);
+        if (tokenValidationResponse != null && isTokenValid(tokenValidationResponse)) {
           Map<String, String> headersMap = getIdentityResponseAsMap(request,
               tokenValidationResponse);
-          servletRequest.setAttribute("identityHeadersMap", headersMap);
+          servletRequest.setAttribute(IdentityConfig.ATTRIBUTE_NAME, headersMap);
           Optional<PreAuthenticatedToken> token = getToken(headersMap, requireTenantId);
           if (token.isPresent()) {
             final PreAuthenticatedToken auth = token.get();
             SecurityContextHolder.getContext().setAuthentication(auth);
+            filterChain.doFilter(servletRequest, response);
           }
-          filterChain.doFilter(servletRequest, response);
         } else {
-          throw new RestClientException("Unauthorized Access");
+          throw new RestClientException("Token Expired");
         }
       } catch (RestClientException e) {
+//        HttpClientErrorException exception = (HttpClientErrorException) e;
+
+//        response.sendError(exception.getRawStatusCode(), e.getLocalizedMessage());
         log.error("Spring Security Filter Chain Exception:", e);
-        throw new AuthenticationException(e.getLocalizedMessage());
-//        prepareResponse(response, e.getLocalizedMessage(), "Bad Token",
-//            HttpStatus.INTERNAL_SERVER_ERROR
-//                .value());
-//        throw e;
+
+//        prepareResponse(request, response, e);
+        throw e;
       }
     }
   }
@@ -126,13 +119,14 @@ public class IdentityAuthFilter extends GenericFilterBean {
       }
     }
 
-    final String tenant = headersMap.get(HEADER_TENANT);
-    final String tenantList = headersMap.get(EXTRA_TENANT_HEADER);
+    final String tenant = headersMap.get(IdentityConfig.HEADER_TENANT);
+    final String tenantList = headersMap.get(IdentityConfig.EXTRA_TENANT_HEADER);
     log.trace("Found tenant {} with roles {} while authenticating", tenant, rolesSet);
 
     if (requireTenantId && !StringUtils.hasText(tenant)) {
       log.debug("Failed PreAuthenticatedToken creation due to missing {} header."
-          + " {}={}, roles={}", HEADER_TENANT, EXTRA_TENANT_HEADER, tenantList, rolesSet);
+              + " {}={}, roles={}", IdentityConfig.HEADER_TENANT, IdentityConfig.EXTRA_TENANT_HEADER,
+          tenantList, rolesSet);
       return Optional.empty();
     }
 
@@ -155,17 +149,17 @@ public class IdentityAuthFilter extends GenericFilterBean {
     }
   }
 
-  private void prepareResponse(HttpServletResponse httpServletResponse, String message,
-      String error, int statusCode)
+  private void prepareResponse(HttpServletRequest httpServletRequest,
+      HttpServletResponse httpServletResponse, RestClientException e)
       throws IOException {
     Map<String, Object> response = new HashMap<>();
 
     response.put("timestamp", LocalDateTime.now().toString());
-    response.put("status", statusCode);
-    response.put("error", error);
-    response.put("message", message);
+    response.put("status", 500);
+    response.put("error", e);
+    response.put("message", e.getLocalizedMessage());
 
-//    response.put("ATTRIBUTE_PATH")
+    response.put("ATTRIBUTE_PATH", httpServletRequest.getRequestURI());
     response.put(ATTRIBUTE_APP, appName);
     response.put(ATTRIBUTE_HOST, InetAddress.getLocalHost().getHostName());
 
@@ -175,7 +169,7 @@ public class IdentityAuthFilter extends GenericFilterBean {
 //    }
 
     httpServletResponse.setContentType("application/json");
-    httpServletResponse.setStatus(statusCode);
+    httpServletResponse.setStatus(500);
     PrintWriter out = httpServletResponse.getWriter();
     out.println(objectMapper.writeValueAsString(response));
   }
@@ -196,11 +190,11 @@ public class IdentityAuthFilter extends GenericFilterBean {
     String tenantIdFromResponse = String.valueOf(Math.abs(
         Integer.parseInt(tokenValidationResponse.getAccess().getToken().getTenant().getId())));
 
-//    String tenantIdFromResponse = String.valueOf(Math.abs(Integer.parseInt(tokenValidationResponse.getAccess().getToken().getTenant().getId());
+//    String tenantIdFromResponse = tokenValidationResponse.getAccess().getToken().getTenant().getId();
 
-    attributes.put(HEADER_X_ROLES, xRolesValues);
-    attributes.put(EXTRA_TENANT_HEADER, extraTenantValues);
-    attributes.put(HEADER_TENANT, tenantIdFromResponse);
+    attributes.put(IdentityConfig.HEADER_X_ROLES, xRolesValues);
+    attributes.put(IdentityConfig.EXTRA_TENANT_HEADER, extraTenantValues);
+    attributes.put(IdentityConfig.HEADER_TENANT, tenantIdFromResponse);
     return attributes;
   }
 

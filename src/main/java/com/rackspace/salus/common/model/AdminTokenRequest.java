@@ -21,6 +21,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NonNull;
+import lombok.experimental.Accessors;
 
 @Data
 @AllArgsConstructor
@@ -31,11 +32,15 @@ public class AdminTokenRequest {
   private Auth auth;
 
   @Data
-  @AllArgsConstructor
+  @Accessors(chain = true)
+  @JsonInclude(JsonInclude.Include.NON_NULL)
   public static class Auth {
 
     @JsonProperty("passwordCredentials")
     private PasswordCredentials passwordCredentials;
+
+    @JsonProperty("RAX-KSKEY:apiKeyCredentials")
+    private APIKeyCredentials apiKeyCredentials;
   }
 
   @Data
@@ -49,6 +54,16 @@ public class AdminTokenRequest {
 
     @JsonProperty("password")
     private String password;
+  }
+
+  @Data
+  @AllArgsConstructor
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  public static class APIKeyCredentials {
+
+    @NonNull
+    @JsonProperty("username")
+    private String username;
 
     @JsonProperty("apiKey")
     private String apiKey;
