@@ -23,6 +23,7 @@ import com.rackspace.salus.common.model.AdminTokenRequest.PasswordCredentials;
 import com.rackspace.salus.common.model.AdminTokenResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -44,9 +45,11 @@ public class IdentityAdminAuthService {
   private final IdentityProperties identityProperties;
 
   @Autowired
-  public IdentityAdminAuthService(RestTemplate restTemplate,
-      IdentityProperties identityProperties) {
-    this.restTemplate = restTemplate;
+  public IdentityAdminAuthService(RestTemplateBuilder restTemplateBuilder,
+                                  IdentityProperties identityProperties) {
+    this.restTemplate = restTemplateBuilder
+      .rootUri(identityProperties.getEndpoint())
+      .build();
     this.identityProperties = identityProperties;
   }
 
@@ -64,7 +67,7 @@ public class IdentityAdminAuthService {
 
     log.debug("hitting {} ", identityProperties.getEndpoint());
     ResponseEntity<AdminTokenResponse> responseEntity = restTemplate
-        .exchange(identityProperties.getEndpoint(), HttpMethod.POST, httpEntity,
+        .exchange("/v2.0/tokens", HttpMethod.POST, httpEntity,
             AdminTokenResponse.class);
     return responseEntity.getBody().getAccess().getToken().getId();
   }
