@@ -53,7 +53,7 @@ public class IdentityAdminAuthService {
     this.identityProperties = identityProperties;
   }
 
-  @Cacheable(cacheNames = "identityTokenCache", key = "adminToken", condition = "#useCache")
+  @Cacheable(cacheNames = "identityTokenCache", condition = "#useCache")
   public String getAdminToken(boolean useCache) {
     log.info("getting admin token");
     HttpHeaders headers = new HttpHeaders();
