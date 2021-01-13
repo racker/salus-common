@@ -32,4 +32,6 @@ public interface IdentityConfig {
    String EXTRA_TENANT_HEADER = "X-Tenant-Id";
 
   String X_AUTH_HEADER = "x-auth-token";
+
+  String IDENTITY_API_X_AUTH_HEADER = "X-Auth-Token";
 }

@@ -16,6 +16,7 @@
 
 package com.rackspace.salus.common.services;
 
+import com.rackspace.salus.common.config.IdentityConfig;
 import com.rackspace.salus.common.config.IdentityProperties;
 import com.rackspace.salus.common.model.TokenValidationResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -28,6 +29,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.client.RestTemplate;
 
+/**
+ * Service class to validate x-auth-token in api request header
+ * from RS Identity API using identity admin credentials
+ */
 @Slf4j
 @Service
 public class IdentityTokenValidationService {
@@ -45,15 +50,17 @@ public class IdentityTokenValidationService {
   }
 
   public TokenValidationResponse validateToken(String xAuthToken) {
-    String endpointUrl = identityProperties.getEndpoint()+ "/" + xAuthToken;
-    String adminToken = "";
+    String endpointUrl = identityProperties.getEndpoint() + "/" + xAuthToken;
     try {
-      adminToken = identityAdminAuthService.getAdminToken(true);
-      return callTokenValidationApi(endpointUrl, adminToken);
+      return callTokenValidationApi(endpointUrl,
+          identityAdminAuthService.getAdminToken(true));
     } catch (RestClientResponseException e) {
+      /**
+       * refresh the cache and get a new admin token from identity api
+       */
       if (e.getRawStatusCode() == 401) {
-        adminToken = identityAdminAuthService.getAdminToken(false);
-        return callTokenValidationApi(endpointUrl, adminToken);
+        return callTokenValidationApi(endpointUrl,
+            identityAdminAuthService.getAdminToken(false));
       }
     }
     return null;
@@ -62,7 +69,7 @@ public class IdentityTokenValidationService {
 
   public TokenValidationResponse callTokenValidationApi(String endpointUrl, String adminToken) {
     HttpHeaders headers = new HttpHeaders();
-    headers.add("X-Auth-Token", adminToken);
+    headers.add(IdentityConfig.IDENTITY_API_X_AUTH_HEADER, adminToken);
     HttpEntity httpEntity = new HttpEntity(headers);
     ResponseEntity<TokenValidationResponse> responseEntity = restTemplate
         .exchange(endpointUrl, HttpMethod.GET, httpEntity, TokenValidationResponse.class);

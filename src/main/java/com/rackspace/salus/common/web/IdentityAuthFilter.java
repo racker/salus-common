@@ -46,6 +46,12 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.filter.GenericFilterBean;
 
+/**
+ * A GenericFilterBean inherited filter class responsible
+ * for validating x-auth-token in api request header and
+ * binding identity response values as attributes to be
+ * used further.
+ */
 @Slf4j
 public class IdentityAuthFilter extends GenericFilterBean {
 
