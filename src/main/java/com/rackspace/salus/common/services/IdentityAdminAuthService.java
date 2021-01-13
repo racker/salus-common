@@ -23,10 +23,7 @@ import com.rackspace.salus.common.model.AdminTokenRequest.PasswordCredentials;
 import com.rackspace.salus.common.model.AdminTokenResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.annotation.CacheConfig;
-import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -35,23 +32,25 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+/**
+ * Service class to get identity admin token using admin credentials from config which will be used
+ * to validate x-auth-token in api request header
+ */
 @Service
 @Slf4j
-@CacheConfig(cacheNames = {"identityToken"})
-@EnableCaching
 public class IdentityAdminAuthService {
 
   private RestTemplate restTemplate;
   private final IdentityProperties identityProperties;
 
   @Autowired
-  public IdentityAdminAuthService(RestTemplate restTemplate, IdentityProperties identityProperties) {
+  public IdentityAdminAuthService(RestTemplate restTemplate,
+      IdentityProperties identityProperties) {
     this.restTemplate = restTemplate;
     this.identityProperties = identityProperties;
   }
 
-  @Cacheable(condition = "#useCache")
-  @CacheEvict(condition = "!#useCache", beforeInvocation = true)
+  @Cacheable(cacheNames = "identityTokenCache", key = "adminToken", condition = "#useCache")
   public String getAdminToken(boolean useCache) {
     log.info("getting admin token");
     HttpHeaders headers = new HttpHeaders();
@@ -63,9 +62,10 @@ public class IdentityAdminAuthService {
 
     HttpEntity httpEntity = new HttpEntity(adminTokenRequest, headers);
 
-    log.debug("hitting {} ",identityProperties.getEndpoint());
+    log.debug("hitting {} ", identityProperties.getEndpoint());
     ResponseEntity<AdminTokenResponse> responseEntity = restTemplate
-        .exchange(identityProperties.getEndpoint(), HttpMethod.POST, httpEntity, AdminTokenResponse.class);
+        .exchange(identityProperties.getEndpoint(), HttpMethod.POST, httpEntity,
+            AdminTokenResponse.class);
     return responseEntity.getBody().getAccess().getToken().getId();
   }
 }
