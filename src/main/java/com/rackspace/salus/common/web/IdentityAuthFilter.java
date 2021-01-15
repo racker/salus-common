@@ -47,10 +47,8 @@ import org.springframework.web.client.RestClientException;
 import org.springframework.web.filter.GenericFilterBean;
 
 /**
- * A GenericFilterBean inherited filter class responsible
- * for validating x-auth-token in api request header and
- * binding identity response values as attributes to be
- * used further.
+ * A GenericFilterBean inherited filter class responsible for validating x-auth-token in api request
+ * header and binding identity response values as attributes to be used further.
  */
 @Slf4j
 public class IdentityAuthFilter extends GenericFilterBean {
@@ -58,6 +56,8 @@ public class IdentityAuthFilter extends GenericFilterBean {
   private final ObjectMapper objectMapper;
   private final IdentityTokenValidationService identityTokenValidationService;
   boolean requireTenantId;
+  private final List<String> rolesHeaders = Arrays
+      .asList(IdentityConfig.HEADER_X_ROLES, IdentityConfig.HEADER_X_IMPERSONATOR_ROLES);
 
   public IdentityAuthFilter(IdentityTokenValidationService identityTokenValidationService,
       ObjectMapper objectMapper, boolean requireTenantId) {
@@ -104,8 +104,8 @@ public class IdentityAuthFilter extends GenericFilterBean {
 
     final Set<String> rolesSet = new HashSet<>();
     for (String header : headersMap.keySet()) {
+      if(rolesHeaders.contains(header) && headersMap.get(header) != null) {
       String roleString = headersMap.get(header);
-      if (roleString != null) {
         List<String> roleValues = Arrays.asList(roleString.split(","));
         rolesSet.addAll(roleValues);
       }

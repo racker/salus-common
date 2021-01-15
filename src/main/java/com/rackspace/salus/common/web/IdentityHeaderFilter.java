@@ -20,17 +20,8 @@ import com.rackspace.salus.common.config.IdentityConfig;
 import java.util.Arrays;
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * This Spring Security filter integrates with Repose by consuming the headers populated by the
- * <a href="https://repose.atlassian.net/wiki/x/CAALAg">Repose Keystone v2 filter</a> and translates
- * that into an authenticated {@link PreAuthenticatedToken}.
- */
 @Slf4j
 public class IdentityHeaderFilter extends PreAuthenticatedFilter {
-
-    public static final String HEADER_X_ROLES = "X-Roles";
-    public static final String HEADER_X_IMPERSONATOR_ROLES = "X-Impersonator-Roles";
-    public static final String HEADER_TENANT = "Requested-Tenant-Id";
 
     public IdentityHeaderFilter(boolean requireTenantId) {
         super(IdentityConfig.HEADER_TENANT, Arrays.asList(IdentityConfig.HEADER_X_ROLES, IdentityConfig.HEADER_X_IMPERSONATOR_ROLES), requireTenantId);

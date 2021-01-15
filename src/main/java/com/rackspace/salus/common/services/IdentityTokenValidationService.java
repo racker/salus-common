@@ -68,7 +68,7 @@ public class IdentityTokenValidationService {
   }
 
 
-  public TokenValidationResponse callTokenValidationApi(String userToken, String adminToken) {
+  private TokenValidationResponse callTokenValidationApi(String userToken, String adminToken) {
     HttpHeaders headers = new HttpHeaders();
     headers.add(IdentityConfig.IDENTITY_API_X_AUTH_HEADER, adminToken);
     HttpEntity httpEntity = new HttpEntity(headers);
