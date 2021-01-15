@@ -114,6 +114,12 @@
       <groupId>com.github.ben-manes.caffeine</groupId>
       <artifactId>caffeine</artifactId>
     </dependency>
+    <dependency>
+      <groupId>uk.co.jemos.podam</groupId>
+      <artifactId>podam</artifactId>
+      <version>7.2.1.RELEASE</version>
+      <scope>test</scope>
+    </dependency>
 
   </dependencies>
 
