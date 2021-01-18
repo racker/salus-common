@@ -27,6 +27,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rackspace.salus.common.config.IdentityConfig;
 import com.rackspace.salus.common.config.IdentityProperties;
 import com.rackspace.salus.common.model.TokenValidationResponse;
+import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -87,5 +88,6 @@ public class IdentityTokenValidationServiceTest {
     TokenValidationResponse tokenValidationResponseActual = identityTokenValidationService.validateToken(xAuthToken);
 
     verify(identityAdminAuthService).getAdminToken(true);
+    Assert.assertEquals(tokenValidationResponseExpected, tokenValidationResponseActual);
   }
 }

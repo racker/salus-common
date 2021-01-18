@@ -27,26 +27,18 @@ import com.rackspace.salus.common.services.IdentityTokenValidationService;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-import javax.servlet.http.HttpServletRequest;
-import lombok.extern.slf4j.Slf4j;
 import org.hamcrest.core.StringStartsWith;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Import;
 import org.springframework.security.core.GrantedAuthority;
 import uk.co.jemos.podam.api.PodamFactory;
 import uk.co.jemos.podam.api.PodamFactoryImpl;
 
 @RunWith(MockitoJUnitRunner.class)
-@Import(ObjectMapper.class)
-@Slf4j
 public class IdentityAuthFilterTest {
-
-  @Mock
-  HttpServletRequest servletRequest;
 
   @Mock
   IdentityTokenValidationService identityTokenValidationService;
