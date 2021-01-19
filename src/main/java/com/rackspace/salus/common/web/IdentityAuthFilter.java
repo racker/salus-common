@@ -153,11 +153,11 @@ public class IdentityAuthFilter extends GenericFilterBean {
         .map(Role::getTenantId)
         .collect(Collectors.joining(","));
 
-    //TODO - for local only - Remove before committing
-    String tenantIdFromResponse = String.valueOf(Math.abs(
-        Integer.parseInt(tokenValidationResponse.getAccess().getToken().getTenant().getId())));
-
-//    String tenantIdFromResponse = tokenValidationResponse.getAccess().getToken().getTenant().getId();
+    String tenantIdFromResponse = tokenValidationResponse.getAccess().getToken().getTenant().getId();
+    //handling of leading dash
+    if(tenantIdFromResponse.startsWith("-"))  {
+      tenantIdFromResponse = tenantIdFromResponse.substring(tenantIdFromResponse.indexOf("-")+1);
+    }
 
     attributes.put(IdentityConfig.HEADER_X_ROLES, xRolesValues);
     attributes.put(IdentityConfig.EXTRA_TENANT_HEADER, extraTenantValues);
