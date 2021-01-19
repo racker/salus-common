@@ -156,7 +156,7 @@ public class IdentityAuthFilter extends GenericFilterBean {
     String tenantIdFromResponse = tokenValidationResponse.getAccess().getToken().getTenant().getId();
     //handling of leading dash
     if(tenantIdFromResponse.startsWith("-"))  {
-      tenantIdFromResponse = tenantIdFromResponse.substring(tenantIdFromResponse.indexOf("-")+1);
+      tenantIdFromResponse = tenantIdFromResponse.substring(1);
     }
 
     attributes.put(IdentityConfig.HEADER_X_ROLES, xRolesValues);
