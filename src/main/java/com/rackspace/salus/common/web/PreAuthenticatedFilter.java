@@ -18,6 +18,7 @@ package com.rackspace.salus.common.web;
 
 import static java.util.stream.Collectors.toList;
 
+import com.rackspace.salus.common.config.IdentityConfig;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -42,10 +43,6 @@ import org.springframework.web.filter.GenericFilterBean;
 @Slf4j
 public class PreAuthenticatedFilter extends GenericFilterBean {
 
-  // some requests don't come through with a `tenantHeader` to validate
-  // but do have a list of tenants to log for audit purposes.
-  private final static String EXTRA_TENANT_HEADER = "X-Tenant-Id";
-
   private final String tenantHeader;
   private final List<String> rolesHeaders;
   private final boolean requireTenantId;
@@ -64,7 +61,7 @@ public class PreAuthenticatedFilter extends GenericFilterBean {
       Optional<PreAuthenticatedToken> token = getToken(req);
       if (token.isPresent()) {
         final PreAuthenticatedToken auth = token.get();
-        log.debug("Processed Repose-driven authentication={}", auth);
+        log.debug("Processed identity authentication={}", auth);
         SecurityContextHolder.getContext().setAuthentication(auth);
       }
     }
@@ -82,12 +79,12 @@ public class PreAuthenticatedFilter extends GenericFilterBean {
       }
     }
     final String tenant = req.getHeader(tenantHeader);
-    final String tenantList = req.getHeader(EXTRA_TENANT_HEADER);
+    final String tenantList = req.getHeader(IdentityConfig.EXTRA_TENANT_HEADER);
     log.trace("Found tenant {} with roles {} while authenticating", tenant, rolesSet);
 
     if (requireTenantId && !StringUtils.hasText(tenant)) {
       log.debug("Failed PreAuthenticatedToken creation due to missing {} header."
-          + " {}={}, roles={}", tenantHeader, EXTRA_TENANT_HEADER, tenantList, rolesSet);
+          + " {}={}, roles={}", tenantHeader, IdentityConfig.EXTRA_TENANT_HEADER, tenantList, rolesSet);
       return Optional.empty();
     }
 

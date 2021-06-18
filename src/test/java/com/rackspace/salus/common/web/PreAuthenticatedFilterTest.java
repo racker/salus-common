@@ -16,9 +16,9 @@
 
 package com.rackspace.salus.common.web;
 
-import static com.rackspace.salus.common.web.ReposeHeaderFilter.HEADER_TENANT;
-import static com.rackspace.salus.common.web.ReposeHeaderFilter.HEADER_X_IMPERSONATOR_ROLES;
-import static com.rackspace.salus.common.web.ReposeHeaderFilter.HEADER_X_ROLES;
+import static com.rackspace.salus.common.config.IdentityConfig.HEADER_TENANT;
+import static com.rackspace.salus.common.config.IdentityConfig.HEADER_X_IMPERSONATOR_ROLES;
+import static com.rackspace.salus.common.config.IdentityConfig.HEADER_X_ROLES;
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;

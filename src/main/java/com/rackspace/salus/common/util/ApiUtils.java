@@ -16,10 +16,14 @@
 
 package com.rackspace.salus.common.util;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.gateway.mvc.ProxyExchange;
 import org.springframework.http.HttpHeaders;
 
+@Slf4j
 public class ApiUtils {
 
   static final List<String> requiredHeaders = List.of(
@@ -30,11 +34,14 @@ public class ApiUtils {
       "Content-Type"
   );
 
-  public static void applyRequiredHeaders(ProxyExchange proxyExchange, HttpHeaders headers) {
+  public static void applyRequiredHeaders(ProxyExchange proxyExchange, HttpHeaders headers, Map<String, Object> attributes) {
     HttpHeaders newHeaders = new HttpHeaders();
     for (String header : requiredHeaders) {
       List<String> value = headers.get(header);
       if (value != null) {
+        newHeaders.put(header, value);
+      } else if(attributes.containsKey(header))  {
+        value = Collections.singletonList(attributes.get(header).toString());
         newHeaders.put(header, value);
       }
     }

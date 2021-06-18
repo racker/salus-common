@@ -18,7 +18,6 @@ package com.rackspace.salus.common.web;
 
 import com.rackspace.salus.common.config.RoleProperties;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -37,13 +36,9 @@ import org.springframework.security.web.firewall.HttpFirewall;
  */
 @Configuration
 @EnableWebSecurity
-@EnableConfigurationProperties(RoleProperties.class)
+@EnableConfigurationProperties({RoleProperties.class})
 @Slf4j
 public class BackendServicesWebSecurityConfig extends WebSecurityConfigurerAdapter {
-
-  @Autowired
-  public BackendServicesWebSecurityConfig() {
-  }
 
   /**
    * This is required to populate the spring security context with the roles
@@ -61,7 +56,7 @@ public class BackendServicesWebSecurityConfig extends WebSecurityConfigurerAdapt
     http
         .csrf().disable()
         .addFilterBefore(
-            new ReposeHeaderFilter(false),
+            new IdentityHeaderFilter(false),
             BasicAuthenticationFilter.class)
         .authorizeRequests()
         .antMatchers("/api/**")
